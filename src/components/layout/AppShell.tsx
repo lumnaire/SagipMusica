@@ -1,10 +1,9 @@
 import { type ReactNode, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Music2,
   ListMusic,
-  PlayCircle,
   Settings,
   LogOut,
   Menu,
@@ -18,17 +17,33 @@ import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
-import churchLogo from "@/assets/church-logo-no-bg.png";
+import churchLogo from "/church-logo-no-bg.png";
+
+interface NavLocation {
+  pathname: string;
+  search: string;
+}
 
 interface NavItem {
   label: string;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
+  /**
+   * Overrides the default "pathname starts with `to`" active check.
+   * Needed for items that share a pathname and differ only by query
+   * string (e.g. Songs vs. Categories), so at most one of them is ever
+   * highlighted as active at the same time.
+   */
+  isActive?: (location: NavLocation) => boolean;
 }
 
 interface NavSection {
   title: string | null;
   items: NavItem[];
+}
+
+function isCategoriesView(location: NavLocation) {
+  return new URLSearchParams(location.search).get("view") === "categories";
 }
 
 const NAV: NavSection[] = [
@@ -39,22 +54,35 @@ const NAV: NavSection[] = [
   {
     title: "Hymnal",
     items: [
-      { label: "Songs", to: "/songs", icon: Music2 },
-      { label: "Categories", to: "/songs?view=categories", icon: Tags },
+      {
+        label: "Songs",
+        to: "/songs",
+        icon: Music2,
+        isActive: (loc) => loc.pathname.startsWith("/songs") && !isCategoriesView(loc),
+      },
+      {
+        label: "Categories",
+        to: "/songs?view=categories",
+        icon: Tags,
+        isActive: (loc) => loc.pathname === "/songs" && isCategoriesView(loc),
+      },
     ],
   },
   {
     title: "Worship",
-    items: [
-      { label: "Worship Sets", to: "/sets", icon: ListMusic },
-      { label: "Present", to: "/sets", icon: PlayCircle },
-    ],
+    items: [{ label: "Worship Sets", to: "/sets", icon: ListMusic }],
   },
   {
     title: null,
     items: [{ label: "Settings", to: "/settings", icon: Settings }],
   },
 ];
+
+function isNavItemActive(item: NavItem, location: NavLocation): boolean {
+  if (item.isActive) return item.isActive(location);
+  const targetPathname = item.to.split("?")[0];
+  return location.pathname === targetPathname || location.pathname.startsWith(`${targetPathname}/`);
+}
 
 function initialsFor(name: string | null, email: string | undefined) {
   if (name && name.trim().length > 0) {
@@ -70,6 +98,7 @@ function initialsFor(name: string | null, email: string | undefined) {
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { profile, session, signOut } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function handleSignOut() {
     await signOut();
@@ -81,7 +110,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="flex items-center gap-2.5 px-5 py-5">
         <img src={churchLogo} alt="" className="h-10 w-10 shrink-0 object-contain" />
         <div>
-          <p className="text-sm font-semibold leading-tight">Worship Presenter</p>
+          <p className="text-sm font-semibold leading-tight">Concordia</p>
           <p className="text-xs text-sidebar-foreground/60">Powered by Lumnaire</p>
         </div>
       </div>
@@ -95,24 +124,25 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               </p>
             )}
             <div className="space-y-0.5">
-              {section.items.map((item) => (
-                <NavLink
-                  key={item.label}
-                  to={item.to}
-                  onClick={onNavigate}
-                  className={({ isActive }) =>
-                    cn(
+              {section.items.map((item) => {
+                const active = isNavItemActive(item, location);
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    onClick={onNavigate}
+                    className={cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      isActive
+                      active
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
                         : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                    )
-                  }
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {item.label}
-                </NavLink>
-              ))}
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         ))}
@@ -179,7 +209,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           <img src={churchLogo} alt="" className="h-7 w-7 object-contain" />
-          <p className="text-sm font-semibold">Worship Presenter</p>
+          <p className="text-sm font-semibold">Concordia</p>
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>

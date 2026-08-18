@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import churchLogo from "@/assets/church-logo-no-bg.png";
+import churchLogo from "/church-logo-no-bg.png";
 import lumnaireLogo from "@/assets/lumnaire_logo.png";
 import show1 from "@/assets/show1.jpg";
 import show2 from "@/assets/show2.jpg";
@@ -93,7 +93,7 @@ export function LoginPage() {
             alt="Fundamental Baptist Church Catanduanes"
             className="h-24 w-24 object-contain drop-shadow-lg"
           />
-          <h1 className="text-2xl font-semibold text-white">Worship Presenter</h1>
+          <h1 className="text-2xl font-semibold text-white">Concordia</h1>
           <p className="text-sm text-white/75">
             Sign in to manage your church's hymnal and lead worship.
           </p>

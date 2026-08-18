@@ -43,12 +43,5 @@ export function createSupabaseMock(tableResponses: Record<string, QueryResponse>
       signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
     },
-    storage: {
-      from: vi.fn(() => ({
-        upload: vi.fn().mockResolvedValue({ data: null, error: null }),
-        getPublicUrl: vi.fn(() => ({ data: { publicUrl: "https://test.supabase.co/mock.png" } })),
-        remove: vi.fn().mockResolvedValue({ data: null, error: null }),
-      })),
-    },
   };
 }

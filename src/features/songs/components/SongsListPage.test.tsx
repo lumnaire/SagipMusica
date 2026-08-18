@@ -29,7 +29,6 @@ vi.mock("@/lib/supabase/client", () => ({
       error: null,
     },
   }),
-  MEDIA_BUCKET: "presentation-media",
 }));
 
 function setAuthProfile(role: Profile["role"]) {

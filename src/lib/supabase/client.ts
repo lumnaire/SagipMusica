@@ -15,5 +15,3 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
   },
 });
-
-export const MEDIA_BUCKET = "presentation-media";

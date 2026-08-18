@@ -18,6 +18,7 @@ import {
 import { usePresentationStore } from "@/stores/presentation-store";
 
 const BACKGROUND_PRESETS = [
+  { label: "Deep Forest", value: "#0c1f16" },
   { label: "Midnight", value: "#0b0d12" },
   { label: "Deep Indigo", value: "#141c33" },
   { label: "Charcoal", value: "#1a1a1a" },
@@ -94,24 +95,6 @@ export function PresentationSettingsDialog({
             </Select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>Notation position</Label>
-            <Select
-              value={style.notationPosition}
-              onValueChange={(v) =>
-                updateStyle({ notationPosition: v as typeof style.notationPosition })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="top">Above lyrics</SelectItem>
-                <SelectItem value="bottom">Below lyrics</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <Label>Lyrics font size</Label>
@@ -123,20 +106,6 @@ export function PresentationSettingsDialog({
               max={100}
               step={2}
               onValueChange={([v]) => updateStyle({ lyricsFontSize: v })}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <Label>Notation width</Label>
-              <span className="text-xs text-muted-foreground">{style.notationMaxWidthPct}%</span>
-            </div>
-            <Slider
-              value={[style.notationMaxWidthPct]}
-              min={30}
-              max={95}
-              step={5}
-              onValueChange={([v]) => updateStyle({ notationMaxWidthPct: v })}
             />
           </div>
         </div>

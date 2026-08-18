@@ -1,11 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import type {
-  Song,
-  SongSection,
-  SectionMedia,
-  SongWithSections,
-  SongSectionWithMedia,
-} from "@/types/database";
+import type { Song, SongSection, SongWithSections } from "@/types/database";
 
 export interface SongFormValues {
   title: string;
@@ -40,27 +34,7 @@ export async function fetchSongWithSections(songId: string): Promise<SongWithSec
     .order("order_index", { ascending: true });
   if (sectionsError) throw sectionsError;
 
-  const sectionIds = (sections ?? []).map((s) => s.id);
-  let mediaBySectionId: Record<string, SectionMedia[]> = {};
-
-  if (sectionIds.length > 0) {
-    const { data: media, error: mediaError } = await supabase
-      .from("section_media")
-      .select("*")
-      .in("section_id", sectionIds);
-    if (mediaError) throw mediaError;
-    mediaBySectionId = (media ?? []).reduce<Record<string, SectionMedia[]>>((acc, m) => {
-      (acc[m.section_id] ??= []).push(m);
-      return acc;
-    }, {});
-  }
-
-  const hydratedSections: SongSectionWithMedia[] = (sections ?? []).map((s) => ({
-    ...s,
-    media: mediaBySectionId[s.id] ?? [],
-  }));
-
-  return { ...(song as Song), sections: hydratedSections };
+  return { ...(song as Song), sections: (sections ?? []) as SongSection[] };
 }
 
 export async function createSong(values: SongFormValues): Promise<Song> {
@@ -107,8 +81,8 @@ export async function deleteSong(songId: string): Promise<void> {
 
 /**
  * Replaces all sections for a song with the given list. Sections that
- * exist in the DB but are no longer present are deleted (their media
- * cascades via FK); new ones are inserted; existing ones are updated.
+ * exist in the DB but are no longer present are deleted; new ones are
+ * inserted; existing ones are updated.
  */
 export async function saveSongSections(
   songId: string,

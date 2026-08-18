@@ -1,32 +1,18 @@
 import { fetchSongWithSections } from "@/features/songs/api";
-import { getMediaPublicUrl } from "@/features/media-editor/api";
 import { supabase } from "@/lib/supabase/client";
 import type { PresentationSlide } from "@/types/presentation";
 import type { SongWithSections } from "@/types/database";
 
 function slidesFromSong(song: SongWithSections): PresentationSlide[] {
-  return song.sections.map((section) => {
-    const notation = section.media[0] ?? null;
-    return {
-      id: `${song.id}:${section.id}`,
-      songId: song.id,
-      songTitle: song.title,
-      sectionId: section.id,
-      sectionType: section.type,
-      sectionTitle: section.title,
-      lyrics: section.lyrics,
-      notationUrl: notation ? getMediaPublicUrl(notation.storage_path) : null,
-      notationCrop: notation
-        ? {
-            x: notation.crop_x,
-            y: notation.crop_y,
-            width: notation.crop_width,
-            height: notation.crop_height,
-            scale: notation.scale,
-          }
-        : null,
-    };
-  });
+  return song.sections.map((section) => ({
+    id: `${song.id}:${section.id}`,
+    songId: song.id,
+    songTitle: song.title,
+    sectionId: section.id,
+    sectionType: section.type,
+    sectionTitle: section.title,
+    lyrics: section.lyrics,
+  }));
 }
 
 export async function loadSongSlides(songId: string): Promise<{

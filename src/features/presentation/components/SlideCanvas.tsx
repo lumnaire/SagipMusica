@@ -1,7 +1,6 @@
 import { useElementSize } from "@/hooks/useElementSize";
-import { NotationImage } from "./NotationImage";
 import type { PresentationSlide, PresentationStyle } from "@/types/presentation";
-import churchLogo from "@/assets/church-logo-no-bg.png";
+import churchLogo from "/church-logo-no-bg.png";
 import lumnaireLogo from "@/assets/lumnaire_logo.png";
 
 const REFERENCE_WIDTH = 1920;
@@ -17,8 +16,8 @@ interface SlideCanvasProps {
 /**
  * Renders a single presentation slide inside a responsive 16:9 canvas.
  * The canvas always keeps a 1920x1080 reference coordinate space and is
- * scaled uniformly to fit whatever container it's placed in, so text and
- * notation sizing stay proportional on any projector resolution.
+ * scaled uniformly to fit whatever container it's placed in, so text
+ * sizing stays proportional on any projector resolution.
  */
 export function SlideCanvas({ slide, style, black, blank }: SlideCanvasProps) {
   const { ref, size } = useElementSize<HTMLDivElement>();
@@ -82,8 +81,7 @@ export function SlideCanvas({ slide, style, black, blank }: SlideCanvasProps) {
                   color: style.textColor,
                   fontFamily: style.fontFamily,
                   textAlign: style.textAlign,
-                  justifyContent:
-                    style.notationPosition === "bottom" ? "flex-end" : "center",
+                  justifyContent: "center",
                 }}
               >
                 {style.showTitle && (
@@ -98,15 +96,6 @@ export function SlideCanvas({ slide, style, black, blank }: SlideCanvasProps) {
                   >
                     {slide.songTitle}
                   </p>
-                )}
-
-                {slide.notationUrl && slide.notationCrop && (
-                  <NotationImage
-                    url={slide.notationUrl}
-                    crop={slide.notationCrop}
-                    maxWidthPx={REFERENCE_WIDTH * (style.notationMaxWidthPct / 100) * scale}
-                    scale={scale}
-                  />
                 )}
 
                 <p

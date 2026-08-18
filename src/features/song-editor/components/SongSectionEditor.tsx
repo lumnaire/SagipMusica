@@ -11,12 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { NotationUploader } from "@/features/media-editor/components/NotationUploader";
 import { SECTION_TYPE_LABELS, type SectionType } from "@/types/database";
 import type { EditableSection } from "../types";
 
 interface SongSectionEditorProps {
-  songId: string | null;
   section: EditableSection;
   index: number;
   onChange: (patch: Partial<EditableSection>) => void;
@@ -26,7 +24,6 @@ interface SongSectionEditorProps {
 const SECTION_TYPES = Object.keys(SECTION_TYPE_LABELS) as SectionType[];
 
 export function SongSectionEditor({
-  songId,
   section,
   index,
   onChange,
@@ -112,22 +109,6 @@ export function SongSectionEditor({
           placeholder={"Amazing grace, how sweet the sound\nThat saved a wretch like me..."}
           className="font-serif text-[15px] leading-relaxed"
         />
-      </div>
-
-      <div className="mt-3 flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Musical Notation Image</label>
-        {songId && section.id ? (
-          <NotationUploader
-            songId={songId}
-            sectionId={section.id}
-            media={section.media}
-            onChange={(media) => onChange({ media })}
-          />
-        ) : (
-          <p className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-4 text-center text-xs text-muted-foreground">
-            Save the song to enable uploading a notation image for this section.
-          </p>
-        )}
       </div>
     </div>
   );

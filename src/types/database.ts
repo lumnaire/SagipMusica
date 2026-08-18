@@ -9,8 +9,6 @@ export type SectionType =
   | "refrain"
   | "custom";
 
-export type MediaType = "notation" | "background";
-
 export interface Profile {
   id: string;
   email: string;
@@ -44,30 +42,6 @@ export interface SongSection {
   updated_at: string;
 }
 
-export interface CropConfig {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  scale: number;
-}
-
-export interface SectionMedia {
-  id: string;
-  section_id: string;
-  storage_path: string;
-  media_type: MediaType;
-  crop_x: number;
-  crop_y: number;
-  crop_width: number;
-  crop_height: number;
-  scale: number;
-  position_x: number;
-  position_y: number;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface WorshipSet {
   id: string;
   name: string;
@@ -86,12 +60,8 @@ export interface WorshipSetItem {
 
 // Composite / hydrated types used across the UI
 
-export interface SongSectionWithMedia extends SongSection {
-  media: SectionMedia[];
-}
-
 export interface SongWithSections extends Song {
-  sections: SongSectionWithMedia[];
+  sections: SongSection[];
 }
 
 export interface WorshipSetItemWithSong extends WorshipSetItem {

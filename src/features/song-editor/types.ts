@@ -1,4 +1,4 @@
-import type { SectionType, SectionMedia } from "@/types/database";
+import type { SectionType } from "@/types/database";
 
 export interface EditableSection {
   key: string; // stable client-side key (crypto.randomUUID()), independent of DB id
@@ -6,5 +6,4 @@ export interface EditableSection {
   type: SectionType;
   title: string;
   lyrics: string;
-  media: SectionMedia | null;
 }

@@ -59,7 +59,6 @@ function emptySection(orderIndex: number): EditableSection {
     type: "verse",
     title: `Verse ${orderIndex + 1}`,
     lyrics: "",
-    media: null,
   };
 }
 
@@ -103,7 +102,6 @@ export function SongEditorPage() {
             type: s.type,
             title: s.title,
             lyrics: s.lyrics,
-            media: s.media[0] ?? null,
           })),
         );
         setExistingSectionIds(song.sections.map((s) => s.id));
@@ -208,7 +206,7 @@ export function SongEditorPage() {
                 {isNew ? "Add Song" : "Edit Song"}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Fill in the details, add stanzas, and upload musical notation.
+                Fill in the details and add stanzas.
               </p>
             </div>
           </div>
@@ -323,7 +321,6 @@ export function SongEditorPage() {
               {sections.map((section, i) => (
                 <SongSectionEditor
                   key={section.key}
-                  songId={songId}
                   section={section}
                   index={i}
                   onChange={(patch) => updateSection(section.key, patch)}

@@ -1,17 +1,16 @@
-# Worship Presenter
+# FBC CONCORDIA
 
-A church worship presentation & hymnal management system. Songs aren't just
-lyrics — every stanza can carry its own musical notation image (cropped just
-for the projector), its own lyrics, and its own place in a worship set. Built
+A church worship presentation & hymnal management system: manage a hymnal of
+songs and stanzas, group them into worship sets, and run a distraction-free
+16:9 presentation on a projector, synced live from a presenter view. Built
 for church staff and volunteer worship teams, not developers.
 
 ## Tech stack
 
 - React + Vite + TypeScript (strict)
 - Tailwind CSS v4 + hand-rolled shadcn-style components (Radix UI primitives)
-- Supabase (Postgres, Auth, Storage, Row Level Security)
+- Supabase (Postgres, Auth, Row Level Security)
 - Zustand for presentation/session state
-- `react-easy-crop` for the notation image crop editor
 - `@dnd-kit` for drag-and-drop reordering
 - Browser Fullscreen API + `BroadcastChannel` for presenter → projector sync
 
@@ -21,7 +20,7 @@ The presentation engine (`src/features/presentation/engine`) is deliberately
 decoupled from the admin UI:
 
 ```
-Supabase (Auth, Postgres, Storage)
+Supabase (Auth, Postgres)
         │
         ▼
   Admin / Presenter app  ──BroadcastChannel──▶  Projector window
@@ -66,7 +65,10 @@ In the Supabase SQL Editor (or via the Supabase CLI), run the files in
 `supabase/migrations/` **in order**:
 
 1. `0001_init.sql` — tables, indexes, triggers, and RLS policies
-2. `0002_storage.sql` — the `presentation-media` storage bucket + policies
+2. `0002_storage.sql` — a storage bucket + policies from an earlier iteration
+   that included musical notation image uploads (since removed)
+3. `0003_remove_notation_media.sql` — drops the bucket/table from (2); the
+   notation-image feature isn't part of the product anymore
 
 If you're using the Supabase CLI locally:
 
@@ -82,9 +84,8 @@ provision accounts for their own staff). Create a user from **Authentication
 → Users → Add user** in the Supabase dashboard. A `profiles` row is created
 automatically (via trigger) with the `presenter` role.
 
-To make that user an admin (required to create/edit songs and upload
-notation), open **Table Editor → profiles** and change their `role` from
-`presenter` to `admin`.
+To make that user an admin (required to create/edit songs), open **Table
+Editor → profiles** and change their `role` from `presenter` to `admin`.
 
 ### 5. (Optional) Load sample hymns
 
@@ -104,18 +105,16 @@ Sign in with the user you created, and you should land on the dashboard.
 ## Demo flow
 
 1. Log in at `/login`
-2. From the dashboard, click **Add Song**
+2. From the dashboard, click **Add Song** (admin only)
 3. Fill in title/author/category, add a few sections (Verse 1, Chorus, ...)
-4. Save the song — this persists it and unlocks notation upload per section
-5. On a section, click **Upload Musical Notes**, then **Edit Crop** to frame
-   just the notation for the projector
-6. Click **Preview** to see it rendered on a simulated 16:9 projector canvas
-7. Go to **Worship Sets → Create Worship Set**, add a few songs, reorder them
-8. Click **Start Presentation**
-9. In the Presenter view, click **Open Projector View** (send it to the
+4. Save the song
+5. Click **Preview** to see it rendered on a simulated 16:9 projector canvas
+6. Go to **Worship Sets → Create Worship Set**, add a few songs, reorder them
+7. Click **Start Presentation**
+8. In the Presenter view, click **Open Projector View** (send it to the
    actual projector display) and **Fullscreen** it there
-10. Use `→` / `Space` / `←` to move through sections, `B` to black the
-    screen, `F` to toggle fullscreen — the projector updates instantly
+9. Use `→` / `Space` / `←` to move through sections, `B` to black the
+   screen, `F` to toggle fullscreen — the projector updates instantly
 
 ## Testing
 
@@ -139,12 +138,11 @@ src/
     dashboard/          dashboard + settings pages
     songs/              song list, preview, data access
     song-editor/        song CRUD form, section list, drag-and-drop
-    media-editor/        notation upload + crop editor (react-easy-crop)
     worship-sets/       worship set CRUD, song picker, reordering
     presentation/        engine (BroadcastChannel, slide loader), presenter
                           controls, projector view, the 16:9 slide canvas
   stores/               Zustand: auth-store, presentation-store
-  types/                Song/SongSection/SectionMedia/WorshipSet/... types
+  types/                Song/SongSection/WorshipSet/... types
   test/                 Vitest setup + a mock Supabase query-builder helper
 supabase/
   migrations/           SQL schema + RLS + storage policies
@@ -153,8 +151,7 @@ supabase/
 
 ## Roles
 
-- **admin** — everything, including creating/editing/deleting songs and
-  uploading notation images
+- **admin** — everything, including creating/editing/deleting songs
 - **presenter** — can view the hymnal, build and run worship sets, and
   control live presentations, but cannot edit the hymnal itself
 

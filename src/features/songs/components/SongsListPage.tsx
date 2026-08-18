@@ -255,8 +255,7 @@ export function SongsListPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this song?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove the song, its sections, and any uploaded notation
-              images. This cannot be undone.
+              This will permanently remove the song and its sections. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
