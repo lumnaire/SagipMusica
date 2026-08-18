@@ -35,11 +35,13 @@ import {
 import { useSongs } from "@/features/songs/hooks/useSongs";
 import { deleteSong } from "@/features/songs/api";
 import { SONG_CATEGORIES } from "@/types/database";
+import { useAuthStore } from "@/stores/auth-store";
 import { formatDistanceToNow } from "date-fns";
 
 export function SongsListPage() {
   const { songs, loading, reload } = useSongs();
   const navigate = useNavigate();
+  const isAdmin = useAuthStore((s) => s.profile?.role === "admin");
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("category") ?? "all");
@@ -93,10 +95,12 @@ export function SongsListPage() {
             <h1 className="text-xl font-semibold text-foreground">Songs</h1>
             <p className="text-sm text-muted-foreground">Manage your church's hymnal.</p>
           </div>
-          <Button onClick={() => navigate("/songs/new")}>
-            <Plus className="h-4 w-4" />
-            Add Song
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => navigate("/songs/new")}>
+              <Plus className="h-4 w-4" />
+              Add Song
+            </Button>
+          )}
         </div>
 
         {showCategories && (
@@ -155,7 +159,7 @@ export function SongsListPage() {
             ))}
           </div>
         ) : songs.length === 0 ? (
-          <EmptyState onAdd={() => navigate("/songs/new")} />
+          <EmptyState isAdmin={isAdmin} onAdd={() => navigate("/songs/new")} />
         ) : filtered.length === 0 ? (
           <p className="rounded-md border border-dashed border-border bg-muted/30 px-4 py-10 text-center text-sm text-muted-foreground">
             No songs match your search.
@@ -214,24 +218,28 @@ export function SongsListPage() {
                         >
                           <PlayCircle className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          title="Edit"
-                          onClick={() => navigate(`/songs/${song.id}/edit`)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          title="Delete"
-                          onClick={() => setPendingDeleteId(song.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Edit"
+                              onClick={() => navigate(`/songs/${song.id}/edit`)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              title="Delete"
+                              onClick={() => setPendingDeleteId(song.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -266,7 +274,7 @@ export function SongsListPage() {
   );
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ isAdmin, onAdd }: { isAdmin: boolean; onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-16 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -275,13 +283,17 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <div>
         <p className="font-medium text-foreground">No songs yet.</p>
         <p className="text-sm text-muted-foreground">
-          Build your church hymnal by adding your first song.
+          {isAdmin
+            ? "Build your church hymnal by adding your first song."
+            : "Ask an admin to add songs to the hymnal."}
         </p>
       </div>
-      <Button onClick={onAdd}>
-        <Plus className="h-4 w-4" />
-        Add Song
-      </Button>
+      {isAdmin && (
+        <Button onClick={onAdd}>
+          <Plus className="h-4 w-4" />
+          Add Song
+        </Button>
+      )}
     </div>
   );
 }

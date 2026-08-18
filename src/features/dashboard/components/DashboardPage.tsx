@@ -58,6 +58,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
 
   const firstName = profile?.name?.split(" ")[0];
+  const isAdmin = profile?.role === "admin";
 
   return (
     <AppShell>
@@ -103,10 +104,12 @@ export function DashboardPage() {
             Quick Actions
           </h2>
           <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate("/songs/new")}>
-              <Plus className="h-4 w-4" />
-              Add Song
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => navigate("/songs/new")}>
+                <Plus className="h-4 w-4" />
+                Add Song
+              </Button>
+            )}
             <Button variant="outline" onClick={() => navigate("/sets/new")}>
               <Plus className="h-4 w-4" />
               Create Worship Set
@@ -163,12 +166,16 @@ export function DashboardPage() {
               ) : (
                 <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
                   <p className="text-sm text-muted-foreground">
-                    No songs yet. Build your church hymnal by adding your first song.
+                    {isAdmin
+                      ? "No songs yet. Build your church hymnal by adding your first song."
+                      : "No songs yet. Ask an admin to add songs to the hymnal."}
                   </p>
-                  <Button size="sm" onClick={() => navigate("/songs/new")}>
-                    <Plus className="h-4 w-4" />
-                    Add Song
-                  </Button>
+                  {isAdmin && (
+                    <Button size="sm" onClick={() => navigate("/songs/new")}>
+                      <Plus className="h-4 w-4" />
+                      Add Song
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>

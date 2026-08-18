@@ -10,10 +10,12 @@ import { SlideCanvas } from "@/features/presentation/components/SlideCanvas";
 import { loadSongSlides } from "@/features/presentation/engine/loadPresentation";
 import { DEFAULT_PRESENTATION_STYLE, type PresentationSlide } from "@/types/presentation";
 import { SECTION_TYPE_LABELS } from "@/types/database";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function SongPreviewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const isAdmin = useAuthStore((s) => s.profile?.role === "admin");
   const [title, setTitle] = useState("");
   const [slides, setSlides] = useState<PresentationSlide[]>([]);
   const [index, setIndex] = useState(0);
@@ -59,10 +61,12 @@ export function SongPreviewPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate(`/songs/${id}/edit`)}>
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
+            {isAdmin && (
+              <Button variant="outline" onClick={() => navigate(`/songs/${id}/edit`)}>
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
             <Button
               onClick={() =>
                 navigate(`/presentation/${crypto.randomUUID()}?type=song&id=${id}`)
@@ -78,7 +82,9 @@ export function SongPreviewPage() {
           <Skeleton className="aspect-video w-full" />
         ) : slides.length === 0 ? (
           <p className="rounded-md border border-dashed border-border bg-muted/30 px-4 py-16 text-center text-sm text-muted-foreground">
-            This song has no sections yet. Add sections in the editor to preview it.
+            {isAdmin
+              ? "This song has no sections yet. Add sections in the editor to preview it."
+              : "This song has no sections yet."}
           </p>
         ) : (
           <>

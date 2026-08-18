@@ -117,6 +117,17 @@ Sign in with the user you created, and you should land on the dashboard.
 10. Use `→` / `Space` / `←` to move through sections, `B` to black the
     screen, `F` to toggle fullscreen — the projector updates instantly
 
+## Testing
+
+Role-gating (what an `admin` vs. a `presenter` can see and do) is covered by
+component tests using Vitest + React Testing Library, with a mocked Supabase
+client so no real project or network access is needed:
+
+```bash
+npm run test        # run once
+npm run test:watch  # watch mode
+```
+
 ## Project structure
 
 ```
@@ -134,6 +145,7 @@ src/
                           controls, projector view, the 16:9 slide canvas
   stores/               Zustand: auth-store, presentation-store
   types/                Song/SongSection/SectionMedia/WorshipSet/... types
+  test/                 Vitest setup + a mock Supabase query-builder helper
 supabase/
   migrations/           SQL schema + RLS + storage policies
   seed.sql              optional public-domain sample hymns

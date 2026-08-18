@@ -1,0 +1,54 @@
+import { vi } from "vitest";
+
+type QueryResponse = { data?: unknown; error?: unknown; count?: number | null };
+
+/**
+ * Builds a chainable stand-in for a Supabase query builder
+ * (`.select().eq().order()...`) that resolves to `response` when awaited,
+ * regardless of which/how many chain methods were called first.
+ */
+export function createQueryBuilderMock(response: QueryResponse = { data: [], error: null }) {
+  const builder: Record<string, unknown> = {};
+  const chainMethods = [
+    "select",
+    "insert",
+    "update",
+    "delete",
+    "upsert",
+    "eq",
+    "in",
+    "order",
+    "limit",
+    "single",
+  ];
+  for (const method of chainMethods) {
+    builder[method] = vi.fn(() => builder);
+  }
+  (builder as unknown as PromiseLike<QueryResponse>).then = (resolve, reject) =>
+    Promise.resolve(response).then(resolve, reject);
+  return builder;
+}
+
+/**
+ * A minimal fake Supabase client. Pass `tableResponses` to control what
+ * `.from("table_name")` resolves to; anything not listed resolves to an
+ * empty, error-free result so unrelated queries don't blow up a test.
+ */
+export function createSupabaseMock(tableResponses: Record<string, QueryResponse> = {}) {
+  return {
+    from: vi.fn((table: string) => createQueryBuilderMock(tableResponses[table])),
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
+    },
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn().mockResolvedValue({ data: null, error: null }),
+        getPublicUrl: vi.fn(() => ({ data: { publicUrl: "https://test.supabase.co/mock.png" } })),
+        remove: vi.fn().mockResolvedValue({ data: null, error: null }),
+      })),
+    },
+  };
+}

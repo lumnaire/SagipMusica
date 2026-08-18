@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
 import type { UserRole } from "@/types/database";
 import { Music } from "lucide-react";
@@ -12,6 +13,14 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireRole }: ProtectedRouteProps) {
   const { status, profile } = useAuthStore();
   const location = useLocation();
+  const isUnauthorized =
+    status === "authenticated" && !!requireRole && profile?.role !== requireRole;
+
+  useEffect(() => {
+    if (isUnauthorized) {
+      toast.error("You don't have access to that. Ask an admin for help.");
+    }
+  }, [isUnauthorized]);
 
   if (status === "loading") {
     return (
@@ -28,7 +37,7 @@ export function ProtectedRoute({ children, requireRole }: ProtectedRouteProps) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  if (requireRole && profile?.role !== requireRole) {
+  if (isUnauthorized) {
     return <Navigate to="/dashboard" replace />;
   }
 
