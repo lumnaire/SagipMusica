@@ -1,6 +1,7 @@
 import { Heart, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
+import { SupportDialog } from "./SupportDialog";
 
 const FACEBOOK_URL = "https://www.facebook.com/lumnaireph";
 
@@ -37,11 +38,7 @@ export function SupportSection() {
               way. If it's saved your team time, a small gift covers the
               hosting and the next set of improvements.
             </p>
-            <Button asChild variant="secondary" className="mt-6 self-start">
-              <a href={FACEBOOK_URL} target="_blank" rel="noreferrer">
-                Support the project
-              </a>
-            </Button>
+            <SupportDialog />
           </div>
         </Reveal>
       </div>
