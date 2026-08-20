@@ -43,7 +43,7 @@ export function OnboardingPage() {
 
   async function handleSignOut() {
     await signOut();
-    navigate("/login");
+    navigate("/");
   }
 
   async function handleStep2(e: FormEvent) {

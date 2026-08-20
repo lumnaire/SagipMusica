@@ -53,7 +53,7 @@ export function SettingsPage() {
 
   async function handleSignOut() {
     await signOut();
-    navigate("/login");
+    navigate("/");
   }
 
   async function runAction(key: string, action: () => Promise<{ error: string | null }>, success: string) {

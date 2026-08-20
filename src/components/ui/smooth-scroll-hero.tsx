@@ -3,7 +3,6 @@ import * as React from "react";
 import {
 	motion,
 	useMotionTemplate,
-	useReducedMotion,
 	useScroll,
 	useTransform,
 } from "framer-motion";
@@ -15,14 +14,13 @@ interface iISmoothScrollHeroProps {
 	 */
 	scrollHeight: number;
 	/**
-	 * Video source played behind the hero.
+	 * Background image URL for desktop view
 	 */
-	videoSrc: string;
+	desktopImage: string;
 	/**
-	 * Still shown before the video paints, and in place of it when the
-	 * visitor prefers reduced motion.
+	 * Background image URL for mobile view
 	 */
-	posterSrc: string;
+	mobileImage: string;
 	/**
 	 * Initial clip path percentage
 	 * @default 25
@@ -35,15 +33,18 @@ interface iISmoothScrollHeroProps {
 	finalClipPercentage: number;
 }
 
-const SmoothScrollHeroBackground: React.FC<iISmoothScrollHeroProps> = ({
+interface iISmoothScrollHeroBackgroundProps extends iISmoothScrollHeroProps {}
+
+const SmoothScrollHeroBackground: React.FC<
+	iISmoothScrollHeroBackgroundProps
+> = ({
 	scrollHeight,
-	videoSrc,
-	posterSrc,
+	desktopImage,
+	mobileImage,
 	initialClipPercentage,
 	finalClipPercentage,
 }) => {
 	const {scrollY} = useScroll();
-	const reduceMotion = useReducedMotion();
 
 	const clipStart = useTransform(
 		scrollY,
@@ -58,55 +59,53 @@ const SmoothScrollHeroBackground: React.FC<iISmoothScrollHeroProps> = ({
 
 	const clipPath = useMotionTemplate`polygon(${clipStart}% ${clipStart}%, ${clipEnd}% ${clipStart}%, ${clipEnd}% ${clipEnd}%, ${clipStart}% ${clipEnd}%)`;
 
-	// The original used background-size 170% -> 100%; a video scales with a
-	// transform instead, which is also cheaper to animate.
-	const scale = useTransform(scrollY, [0, scrollHeight + 500], [1.7, 1]);
+	const backgroundSize = useTransform(
+		scrollY,
+		[0, scrollHeight + 500],
+		["170%", "100%"],
+	);
 
 	return (
 		<motion.div
-			className="sticky top-0 h-screen w-full overflow-hidden bg-black"
+			className="sticky top-0 h-screen w-full bg-black"
 			style={{
 				clipPath,
-				willChange: "clip-path",
+				willChange: "transform, opacity",
 			}}
 		>
+			{/* Mobile background */}
 			<motion.div
-				className="absolute inset-0"
-				style={reduceMotion ? undefined : {scale}}
-			>
-				{reduceMotion ? (
-					<img
-						src={posterSrc}
-						alt=""
-						aria-hidden="true"
-						className="h-full w-full object-cover"
-					/>
-				) : (
-					<video
-						className="h-full w-full object-cover"
-						src={videoSrc}
-						poster={posterSrc}
-						autoPlay
-						muted
-						loop
-						playsInline
-						preload="metadata"
-						aria-hidden="true"
-						tabIndex={-1}
-					/>
-				)}
-			</motion.div>
+				className="absolute inset-0 md:hidden"
+				style={{
+					backgroundImage: `url(${mobileImage})`,
+					backgroundSize,
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat",
+				}}
+			/>
+			{/* Desktop background */}
+			<motion.div
+				className="absolute inset-0 hidden md:block"
+				style={{
+					backgroundImage: `url(${desktopImage})`,
+					backgroundSize,
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat",
+				}}
+			/>
 		</motion.div>
 	);
 };
 
 /**
- * A smooth scroll hero component with a parallax video background.
+ * A smooth scroll hero component with parallax background effect
+ * @param props - Component props
+ * @returns React component
  */
 const SmoothScrollHero: React.FC<iISmoothScrollHeroProps> = ({
 	scrollHeight = 1500,
-	videoSrc,
-	posterSrc,
+	desktopImage,
+	mobileImage,
 	initialClipPercentage = 25,
 	finalClipPercentage = 75,
 }) => {
@@ -117,8 +116,8 @@ const SmoothScrollHero: React.FC<iISmoothScrollHeroProps> = ({
 		>
 			<SmoothScrollHeroBackground
 				scrollHeight={scrollHeight}
-				videoSrc={videoSrc}
-				posterSrc={posterSrc}
+				desktopImage={desktopImage}
+				mobileImage={mobileImage}
 				initialClipPercentage={initialClipPercentage}
 				finalClipPercentage={finalClipPercentage}
 			/>
