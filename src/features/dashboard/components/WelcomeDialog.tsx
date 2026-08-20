@@ -49,9 +49,7 @@ export function WelcomeDialog({
                 {songCount} hymns are already in your hymnal
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Baptist favourites like Amazing Grace, The Old Rugged Cross,
-                and Blessed Assurance — with verses ready to project. Edit or
-                remove any of them; they're yours.
+                Start your worship with this — with verses ready to project. Edit or remove any of them.
               </p>
             </div>
           </div>

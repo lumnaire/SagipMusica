@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FloatingPathsBackground } from "@/components/ui/floating-paths";
+import { GradientBackdrop } from "@/components/ui/gradient-backdrop";
 import { REFERRAL_SOURCE_LABELS, type ReferralSource } from "@/types/database";
 import { cn } from "@/lib/utils";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
@@ -68,10 +68,7 @@ export function OnboardingPage() {
   }
 
   return (
-    <FloatingPathsBackground
-      position={-1}
-      className="flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 py-12"
-    >
+    <GradientBackdrop className="flex min-h-svh items-center justify-center px-4 py-12">
       <div className="relative w-full max-w-md">
         <div className="mb-7 flex flex-col items-center gap-3 text-center">
           <img src={sagipmusicaLogo} alt="SagipMusica" className="h-14 w-14 object-contain" />
@@ -180,6 +177,6 @@ export function OnboardingPage() {
           </button>
         </div>
       </div>
-    </FloatingPathsBackground>
+    </GradientBackdrop>
   );
 }
