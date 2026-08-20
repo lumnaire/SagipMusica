@@ -111,6 +111,20 @@ export function LoginPage() {
               Sign up
             </Link>
           </p>
+
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            <Link to="/terms" className="hover:underline">
+              Terms
+            </Link>
+            {" · "}
+            <Link to="/privacy" className="hover:underline">
+              Privacy
+            </Link>
+            {" · "}
+            <Link to="/cookies" className="hover:underline">
+              Cookies
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </AuthLayout>

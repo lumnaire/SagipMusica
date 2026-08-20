@@ -4,17 +4,23 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
 
-export function MarketingNav() {
-  // Transparent over the hero image, then settles onto the page once the
+/**
+ * @param solid Forces the filled bar. Pages without a dark hero behind the
+ * nav (the legal pages) need it, or the white wordmark sits on ivory.
+ */
+export function MarketingNav({ solid = false }: { solid?: boolean }) {
+  // Transparent over the hero video, then settles onto the page once the
   // reader has scrolled past it.
-  const [scrolled, setScrolled] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const scrolled = solid || hasScrolled;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    if (solid) return;
+    const onScroll = () => setHasScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [solid]);
 
   return (
     // The nav stays light-on-dark the whole way down: the hero is a tall dark

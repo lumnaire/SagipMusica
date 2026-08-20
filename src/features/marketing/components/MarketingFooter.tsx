@@ -4,6 +4,7 @@ import {
   LinkedInIcon,
   XIcon,
 } from "@/components/icons/social-icons";
+import { useConsentStore } from "@/stores/consent-store";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
 
 const SOCIALS = [
@@ -21,6 +22,8 @@ const SOCIALS = [
 ];
 
 export function MarketingFooter() {
+  const openCustomize = useConsentStore((s) => s.openCustomize);
+
   return (
     <footer className="border-t border-border bg-background py-14">
       <div className="mx-auto max-w-6xl px-6">
@@ -68,6 +71,36 @@ export function MarketingFooter() {
                   <Link to="/login" className="text-muted-foreground hover:text-foreground">
                     Sign in
                   </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="eyebrow">Legal</h2>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li>
+                  <Link to="/terms" className="text-muted-foreground hover:text-foreground">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cookies" className="text-muted-foreground hover:text-foreground">
+                    Cookie Policy
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={openCustomize}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Cookie settings
+                  </button>
                 </li>
               </ul>
             </div>

@@ -3,6 +3,9 @@ import { RootRoute } from "@/features/marketing/components/RootRoute";
 import { LoginPage } from "@/features/auth/components/LoginPage";
 import { SignupPage } from "@/features/auth/components/SignupPage";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
+import { TermsPage } from "@/features/legal/components/TermsPage";
+import { PrivacyPage } from "@/features/legal/components/PrivacyPage";
+import { CookiePolicyPage } from "@/features/legal/components/CookiePolicyPage";
 import { OnboardingPage } from "@/features/onboarding/components/OnboardingPage";
 import { DashboardPage } from "@/features/dashboard/components/DashboardPage";
 import { SettingsPage } from "@/features/dashboard/components/SettingsPage";
@@ -20,6 +23,11 @@ export function AppRoutes() {
       <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+
+      {/* Public: reachable signed in or out, and linkable from anywhere. */}
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/cookies" element={<CookiePolicyPage />} />
 
       <Route
         path="/onboarding"

@@ -3,6 +3,7 @@ import * as React from "react";
 import {
 	motion,
 	useMotionTemplate,
+	useReducedMotion,
 	useScroll,
 	useTransform,
 } from "framer-motion";
@@ -14,15 +15,14 @@ interface iISmoothScrollHeroProps {
 	 */
 	scrollHeight: number;
 	/**
-	 * Background image URL for desktop view
-	 * @default "https://images.unsplash.com/photo-1511884642898-4c92249e20b6"
+	 * Video source played behind the hero.
 	 */
-	desktopImage: string;
+	videoSrc: string;
 	/**
-	 * Background image URL for mobile view
-	 * @default "https://images.unsplash.com/photo-1511207538754-e8555f2bc187?q=80&w=2412&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+	 * Still shown before the video paints, and in place of it when the
+	 * visitor prefers reduced motion.
 	 */
-	mobileImage: string;
+	posterSrc: string;
 	/**
 	 * Initial clip path percentage
 	 * @default 25
@@ -35,18 +35,15 @@ interface iISmoothScrollHeroProps {
 	finalClipPercentage: number;
 }
 
-interface iISmoothScrollHeroBackgroundProps extends iISmoothScrollHeroProps {}
-
-const SmoothScrollHeroBackground: React.FC<
-	iISmoothScrollHeroBackgroundProps
-> = ({
+const SmoothScrollHeroBackground: React.FC<iISmoothScrollHeroProps> = ({
 	scrollHeight,
-	desktopImage,
-	mobileImage,
+	videoSrc,
+	posterSrc,
 	initialClipPercentage,
 	finalClipPercentage,
 }) => {
 	const {scrollY} = useScroll();
+	const reduceMotion = useReducedMotion();
 
 	const clipStart = useTransform(
 		scrollY,
@@ -61,53 +58,55 @@ const SmoothScrollHeroBackground: React.FC<
 
 	const clipPath = useMotionTemplate`polygon(${clipStart}% ${clipStart}%, ${clipEnd}% ${clipStart}%, ${clipEnd}% ${clipEnd}%, ${clipStart}% ${clipEnd}%)`;
 
-	const backgroundSize = useTransform(
-		scrollY,
-		[0, scrollHeight + 500],
-		["170%", "100%"],
-	);
+	// The original used background-size 170% -> 100%; a video scales with a
+	// transform instead, which is also cheaper to animate.
+	const scale = useTransform(scrollY, [0, scrollHeight + 500], [1.7, 1]);
 
 	return (
 		<motion.div
-			className="sticky top-0 h-screen w-full bg-black"
+			className="sticky top-0 h-screen w-full overflow-hidden bg-black"
 			style={{
 				clipPath,
-				willChange: "transform, opacity",
+				willChange: "clip-path",
 			}}
 		>
-			{/* Mobile background */}
 			<motion.div
-				className="absolute inset-0 md:hidden"
-				style={{
-					backgroundImage: `url(${mobileImage})`,
-					backgroundSize,
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-				}}
-			/>
-			{/* Desktop background */}
-			<motion.div
-				className="absolute inset-0 hidden md:block"
-				style={{
-					backgroundImage: `url(${desktopImage})`,
-					backgroundSize,
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-				}}
-			/>
+				className="absolute inset-0"
+				style={reduceMotion ? undefined : {scale}}
+			>
+				{reduceMotion ? (
+					<img
+						src={posterSrc}
+						alt=""
+						aria-hidden="true"
+						className="h-full w-full object-cover"
+					/>
+				) : (
+					<video
+						className="h-full w-full object-cover"
+						src={videoSrc}
+						poster={posterSrc}
+						autoPlay
+						muted
+						loop
+						playsInline
+						preload="metadata"
+						aria-hidden="true"
+						tabIndex={-1}
+					/>
+				)}
+			</motion.div>
 		</motion.div>
 	);
 };
 
 /**
- * A smooth scroll hero component with parallax background effect
- * @param props - Component props
- * @returns React component
+ * A smooth scroll hero component with a parallax video background.
  */
- const SmoothScrollHero: React.FC<iISmoothScrollHeroProps> = ({
+const SmoothScrollHero: React.FC<iISmoothScrollHeroProps> = ({
 	scrollHeight = 1500,
-	desktopImage = "https://images.unsplash.com/photo-1511884642898-4c92249e20b6",
-	mobileImage = "https://images.unsplash.com/photo-1511207538754-e8555f2bc187?q=80&w=2412&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+	videoSrc,
+	posterSrc,
 	initialClipPercentage = 25,
 	finalClipPercentage = 75,
 }) => {
@@ -118,8 +117,8 @@ const SmoothScrollHeroBackground: React.FC<
 		>
 			<SmoothScrollHeroBackground
 				scrollHeight={scrollHeight}
-				desktopImage={desktopImage}
-				mobileImage={mobileImage}
+				videoSrc={videoSrc}
+				posterSrc={posterSrc}
 				initialClipPercentage={initialClipPercentage}
 				finalClipPercentage={finalClipPercentage}
 			/>

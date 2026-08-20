@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { useAuthStore } from "@/stores/auth-store";
 import { useChurchStore } from "@/stores/church-store";
+import { CookieBanner } from "@/features/legal/components/CookieBanner";
 
 function App() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -26,6 +27,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
+      <CookieBanner />
       <Toaster />
     </BrowserRouter>
   );

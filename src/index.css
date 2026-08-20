@@ -182,6 +182,43 @@
     letter-spacing: 0.18em;
   }
 
+  /* Long-form legal copy. Hand-rolled rather than pulling in the typography
+     plugin for three pages. */
+  .legal-prose {
+    @apply text-[0.9375rem] leading-relaxed text-muted-foreground;
+  }
+  .legal-prose h2 {
+    @apply mt-12 mb-3 font-display text-2xl font-medium text-foreground;
+    letter-spacing: -0.01em;
+  }
+  .legal-prose h3 {
+    @apply mt-7 mb-2 text-base font-semibold text-foreground;
+  }
+  .legal-prose p {
+    @apply mb-4;
+  }
+  .legal-prose ul {
+    @apply mb-4 list-disc space-y-2 pl-5;
+  }
+  .legal-prose li::marker {
+    color: var(--color-accent);
+  }
+  .legal-prose a {
+    @apply font-medium text-primary underline-offset-4 hover:underline;
+  }
+  .legal-prose strong {
+    @apply font-semibold text-foreground;
+  }
+  .legal-prose table {
+    @apply mb-4 w-full border-collapse text-sm;
+  }
+  .legal-prose th {
+    @apply border-b border-border py-2 pr-4 text-left font-semibold text-foreground;
+  }
+  .legal-prose td {
+    @apply border-b border-border py-2.5 pr-4 align-top;
+  }
+
   /* Five hairlines, spaced like a musical staff. Used as a section rule. */
   .staff-rule {
     height: 13px;

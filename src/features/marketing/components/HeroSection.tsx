@@ -3,7 +3,8 @@ import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SmoothScrollHero from "@/components/ui/smooth-scroll-hero";
-import heroImage from "@/assets/hero-img.avif";
+import heroVideo from "@/assets/hero-vid.mp4";
+import heroPoster from "@/assets/hero-img.avif";
 
 const SCROLL_HEIGHT = 1200;
 
@@ -23,8 +24,8 @@ export function HeroSection() {
     <div className="relative bg-sidebar">
       <SmoothScrollHero
         scrollHeight={SCROLL_HEIGHT}
-        desktopImage={heroImage}
-        mobileImage={heroImage}
+        videoSrc={heroVideo}
+        posterSrc={heroPoster}
         initialClipPercentage={14}
         finalClipPercentage={86}
       />
