@@ -186,8 +186,7 @@ export function SignupPage() {
             <Link to="/privacy" className="font-medium text-primary hover:underline">
               Privacy Policy
             </Link>
-            . Signing in with Google shares only your name, email, and profile
-            picture with us.
+
           </p>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">

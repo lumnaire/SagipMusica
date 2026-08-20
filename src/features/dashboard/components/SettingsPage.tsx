@@ -99,7 +99,10 @@ export function SettingsPage() {
       toast.error(error);
       return;
     }
-    navigate("/");
+    // Replace rather than push: the dashboard is gone, so Back should not
+    // lead to a screen that no longer has an account behind it.
+    navigate("/", { replace: true });
+    toast.success("Your account has been deleted.");
   }
 
   return (
