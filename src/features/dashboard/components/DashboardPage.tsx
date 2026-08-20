@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Music2, ListMusic, BookOpen, Sparkles, Plus, PlayCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Song } from "@/types/database";
+import "driver.js/dist/driver.css";
 
 interface DashboardStats {
   totalSongs: number;
@@ -53,12 +54,77 @@ function useDashboardStats() {
 }
 
 export function DashboardPage() {
-  const { profile } = useAuthStore();
+  const { profile, refreshProfile } = useAuthStore();
   const { stats, loading } = useDashboardStats();
   const navigate = useNavigate();
+  const tourStarted = useRef(false);
 
   const firstName = profile?.name?.split(" ")[0];
   const isAdmin = profile?.role === "admin";
+
+  useEffect(() => {
+    if (tourStarted.current || !profile || profile.onboarding_completed) return;
+    tourStarted.current = true;
+
+    (async () => {
+      const { driver } = await import("driver.js");
+      const finish = async () => {
+        await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", profile.id);
+        await refreshProfile();
+      };
+
+      const tour = driver({
+        showProgress: true,
+        onDestroyed: finish,
+        steps: [
+          {
+            element: '[data-tour-id="nav-dashboard"]',
+            popover: {
+              title: "Your dashboard",
+              description: "A quick overview of your church's songs and worship sets.",
+            },
+          },
+          {
+            element: '[data-tour-id="nav-songs"]',
+            popover: {
+              title: "Songs",
+              description: "Build your church's hymnal here — lyrics, sections, and more.",
+            },
+          },
+          {
+            element: '[data-tour-id="nav-sets"]',
+            popover: {
+              title: "Worship Sets",
+              description: "Put together a service order and present it live.",
+            },
+          },
+          {
+            element: '[data-tour-id="nav-settings"]',
+            popover: {
+              title: "Settings",
+              description: "Customize your church's accent color and manage your account.",
+            },
+          },
+          {
+            element: '[data-tour-id="quick-actions"]',
+            popover: {
+              title: "Quick actions",
+              description: "Jump straight into adding a song or building a worship set.",
+            },
+          },
+          {
+            element: '[data-tour-id="recent-songs"]',
+            popover: {
+              title: "Recent songs",
+              description: "Your most recently added songs show up here.",
+            },
+          },
+        ],
+      });
+
+      tour.drive();
+    })();
+  }, [profile, refreshProfile]);
 
   return (
     <AppShell>
@@ -103,7 +169,7 @@ export function DashboardPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Quick Actions
           </h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3" data-tour-id="quick-actions">
             {isAdmin && (
               <Button onClick={() => navigate("/songs/new")}>
                 <Plus className="h-4 w-4" />
@@ -125,7 +191,7 @@ export function DashboardPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Recent Songs
           </h2>
-          <Card>
+          <Card data-tour-id="recent-songs">
             <CardContent className="p-0">
               {loading ? (
                 <div className="space-y-2 p-4">

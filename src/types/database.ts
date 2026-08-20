@@ -9,17 +9,38 @@ export type SectionType =
   | "refrain"
   | "custom";
 
+export type ReferralSource =
+  | "facebook"
+  | "youtube"
+  | "linkedin"
+  | "instagram"
+  | "friend"
+  | "other";
+
+export interface Church {
+  id: string;
+  name: string;
+  referral_source: ReferralSource | null;
+  accent_color: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Profile {
   id: string;
+  church_id: string | null;
   email: string;
   name: string | null;
   role: UserRole;
+  onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface Song {
   id: string;
+  church_id: string;
   title: string;
   author: string | null;
   composer: string | null;
@@ -33,6 +54,7 @@ export interface Song {
 
 export interface SongSection {
   id: string;
+  church_id: string;
   song_id: string;
   type: SectionType;
   title: string;
@@ -44,6 +66,7 @@ export interface SongSection {
 
 export interface WorshipSet {
   id: string;
+  church_id: string;
   name: string;
   description: string | null;
   created_at: string;
@@ -52,6 +75,7 @@ export interface WorshipSet {
 
 export interface WorshipSetItem {
   id: string;
+  church_id: string;
   set_id: string;
   song_id: string;
   order_index: number;
@@ -80,6 +104,15 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   outro: "Outro",
   refrain: "Refrain",
   custom: "Custom",
+};
+
+export const REFERRAL_SOURCE_LABELS: Record<ReferralSource, string> = {
+  facebook: "Facebook",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
+  friend: "A friend recommended it",
+  other: "Other",
 };
 
 export const SONG_CATEGORIES = [

@@ -34,7 +34,16 @@ function setAuthProfile(role: Profile["role"]) {
   useAuthStore.setState({
     status: "authenticated",
     session: { user: { email: "test@church.org" } } as never,
-    profile: { id: "u1", email: "test@church.org", name: "Test User", role } as Profile,
+    profile: {
+      id: "u1",
+      church_id: "church-1",
+      email: "test@church.org",
+      name: "Test User",
+      role,
+      // Already onboarded, so the driver.js spotlight tour doesn't fire
+      // and interfere with these role-gating assertions.
+      onboarding_completed: true,
+    } as Profile,
   });
 }
 

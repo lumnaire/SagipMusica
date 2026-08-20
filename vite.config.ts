@@ -11,4 +11,12 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  server: {
+    // Fixed port so the OAuth redirect URLs registered in Supabase/Google
+    // Cloud Console don't go stale when another local project occupies
+    // Vite's default 5173. strictPort fails loudly instead of silently
+    // shifting to a different port that isn't registered anywhere.
+    port: 5190,
+    strictPort: true,
+  },
 })

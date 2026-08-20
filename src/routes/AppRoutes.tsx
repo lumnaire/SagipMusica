@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { RootRoute } from "@/features/marketing/components/RootRoute";
 import { LoginPage } from "@/features/auth/components/LoginPage";
+import { SignupPage } from "@/features/auth/components/SignupPage";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
+import { OnboardingPage } from "@/features/onboarding/components/OnboardingPage";
 import { DashboardPage } from "@/features/dashboard/components/DashboardPage";
 import { SettingsPage } from "@/features/dashboard/components/SettingsPage";
 import { SongsListPage } from "@/features/songs/components/SongsListPage";
@@ -14,9 +17,18 @@ import { ProjectorView } from "@/features/presentation/components/ProjectorView"
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute requireChurch={false}>
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/dashboard"
@@ -106,7 +118,7 @@ export function AppRoutes() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,6 +1,6 @@
 import { useElementSize } from "@/hooks/useElementSize";
 import type { PresentationSlide, PresentationStyle } from "@/types/presentation";
-import churchLogo from "/church-logo-no-bg.png";
+import churchLogo from "@/assets/sagipmusica-logo.png";
 import lumnaireLogo from "@/assets/lumnaire_logo.png";
 
 const REFERENCE_WIDTH = 1920;
