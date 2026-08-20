@@ -28,10 +28,12 @@ export interface PresentationStyle {
 }
 
 export const DEFAULT_PRESENTATION_STYLE: PresentationStyle = {
-  backgroundColor: "#0c1f16",
+  // Plain black: it matches the blackout mode and the unlit area around the
+  // projected image, so nothing shifts tone when the screen is blanked.
+  backgroundColor: "#000000",
   backgroundImageUrl: null,
-  textColor: "#f5f3ec",
-  fontFamily: "'Source Serif 4', Georgia, serif",
+  textColor: "#ffffff",
+  fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
   titleFontSize: 56,
   lyricsFontSize: 64,
   textAlign: "center",

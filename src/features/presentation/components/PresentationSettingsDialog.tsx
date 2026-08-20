@@ -18,7 +18,7 @@ import {
 import { usePresentationStore } from "@/stores/presentation-store";
 
 const BACKGROUND_PRESETS = [
-  { label: "Deep Forest", value: "#0c1f16" },
+  { label: "Black", value: "#000000" },
   { label: "Midnight", value: "#0b0d12" },
   { label: "Deep Indigo", value: "#141c33" },
   { label: "Charcoal", value: "#1a1a1a" },
