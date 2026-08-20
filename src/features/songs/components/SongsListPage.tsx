@@ -1,7 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus, Search, Music2, Eye, Pencil, Trash2, PlayCircle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Music2,
+  Eye,
+  Pencil,
+  Trash2,
+  PlayCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +48,16 @@ import { SONG_CATEGORIES } from "@/types/database";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDistanceToNow } from "date-fns";
 
+const PAGE_SIZE = 15;
+
+type SortOption = "title-asc" | "title-desc" | "recent";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  "title-asc": "Title A–Z",
+  "title-desc": "Title Z–A",
+  recent: "Recently updated",
+};
+
 export function SongsListPage() {
   const { songs, loading, reload } = useSongs();
   const navigate = useNavigate();
@@ -45,6 +65,8 @@ export function SongsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("category") ?? "all");
+  const [sort, setSort] = useState<SortOption>("title-asc");
+  const [page, setPage] = useState(1);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const showCategories = searchParams.get("view") === "categories";
 
@@ -63,7 +85,7 @@ export function SongsListPage() {
   }
 
   const filtered = useMemo(() => {
-    return songs.filter((s) => {
+    const matches = songs.filter((s) => {
       const matchesSearch =
         !search ||
         s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -71,7 +93,34 @@ export function SongsListPage() {
       const matchesCategory = category === "all" || s.category === category;
       return matchesSearch && matchesCategory;
     });
-  }, [songs, search, category]);
+
+    const sorted = [...matches];
+    switch (sort) {
+      case "title-asc":
+        // localeCompare so accented titles file where a reader expects.
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "title-desc":
+        sorted.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+      case "recent":
+        sorted.sort(
+          (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        );
+        break;
+    }
+    return sorted;
+  }, [songs, search, category, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Any change to the result set should put the reader back at the first page,
+  // otherwise a narrowed search can strand them on an empty one.
+  useEffect(() => {
+    setPage(1);
+  }, [search, category, sort]);
 
   async function handleDelete() {
     if (!pendingDeleteId) return;
@@ -150,6 +199,18 @@ export function SongsListPage() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
+            <SelectTrigger className="sm:w-48" aria-label="Sort songs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(SORT_LABELS) as SortOption[]).map((option) => (
+                <SelectItem key={option} value={option}>
+                  {SORT_LABELS[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (
@@ -179,7 +240,7 @@ export function SongsListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((song) => (
+                {visible.map((song) => (
                   <TableRow key={song.id}>
                     <TableCell className="font-medium text-foreground">
                       <div className="flex items-center gap-2">
@@ -246,6 +307,42 @@ export function SongsListPage() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+
+        {!loading && filtered.length > 0 && (
+          <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              Showing {(currentPage - 1) * PAGE_SIZE + 1}–
+              {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} song
+              {filtered.length === 1 ? "" : "s"}
+            </p>
+
+            {pageCount > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="px-1 text-sm text-muted-foreground">
+                  Page {currentPage} of {pageCount}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === pageCount}
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

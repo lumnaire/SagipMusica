@@ -1,5 +1,24 @@
 import { Link } from "react-router-dom";
+import {
+  FacebookIcon,
+  LinkedInIcon,
+  XIcon,
+} from "@/components/icons/social-icons";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+
+const SOCIALS = [
+  {
+    name: "Facebook",
+    href: "https://www.facebook.com/lumnaireph",
+    Icon: FacebookIcon,
+  },
+  { name: "X", href: "https://x.com/Lumnaire_coding", Icon: XIcon },
+  {
+    name: "LinkedIn",
+    href: "https://www.linkedin.com/company/lumnaire",
+    Icon: LinkedInIcon,
+  },
+];
 
 export function MarketingFooter() {
   return (
@@ -15,6 +34,25 @@ export function MarketingFooter() {
               A hymnal, a service order, and a projector — in one place for
               your church.
             </p>
+
+            <div className="mt-5">
+              <p className="text-xs text-muted-foreground">Follow our socials</p>
+              <ul className="mt-2.5 flex items-center gap-2">
+                {SOCIALS.map(({ name, href, Icon }) => (
+                  <li key={name}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`SagipMusica on ${name}`}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted hover:text-foreground"
+                    >
+                      <Icon className="h-4 w-4" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <nav className="flex gap-16" aria-label="Footer">

@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { useChurchStore } from "@/stores/church-store";
+import { WelcomeDialog } from "./WelcomeDialog";
 import type { Song } from "@/types/database";
 import "driver.js/dist/driver.css";
 
@@ -55,9 +57,11 @@ function useDashboardStats() {
 
 export function DashboardPage() {
   const { profile, refreshProfile } = useAuthStore();
+  const church = useChurchStore((s) => s.church);
   const { stats, loading } = useDashboardStats();
   const navigate = useNavigate();
   const tourStarted = useRef(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const firstName = profile?.name?.split(" ")[0];
   const isAdmin = profile?.role === "admin";
@@ -69,6 +73,10 @@ export function DashboardPage() {
     (async () => {
       const { driver } = await import("driver.js");
       const finish = async () => {
+        // Land on the welcome note once the tour is done (or skipped), so the
+        // first thing they see after the walkthrough is that the hymnal is
+        // already stocked.
+        setShowWelcome(true);
         await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", profile.id);
         await refreshProfile();
       };
@@ -248,6 +256,13 @@ export function DashboardPage() {
           </Card>
         </div>
       </div>
+
+      <WelcomeDialog
+        open={showWelcome}
+        onOpenChange={setShowWelcome}
+        churchName={church?.name ?? null}
+        songCount={stats?.totalSongs ?? 0}
+      />
     </AppShell>
   );
 }
