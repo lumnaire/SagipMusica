@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus, Eye, Save, ArrowLeft } from "lucide-react";
+import { Plus, Eye, Save, ArrowLeft, ClipboardPaste } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -28,7 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ParsedSection } from "@/features/song-editor/lyrics-parser";
 import { SongSectionEditor } from "./SongSectionEditor";
+import { PasteSongDialog } from "./PasteSongDialog";
 import {
   createSong,
   updateSong,
@@ -53,11 +55,16 @@ function makeKey() {
   return crypto.randomUUID();
 }
 
-function emptySection(orderIndex: number): EditableSection {
+/**
+ * Numbers by how many verses already exist rather than by array position, so
+ * adding a verse after a chorus gives "Verse 2" instead of "Verse 3".
+ */
+function emptySection(existing: EditableSection[]): EditableSection {
+  const verseCount = existing.filter((s) => s.type === "verse").length;
   return {
     key: makeKey(),
     type: "verse",
-    title: `Verse ${orderIndex + 1}`,
+    title: `Verse ${verseCount + 1}`,
     lyrics: "",
   };
 }
@@ -73,12 +80,13 @@ export function SongEditorPage() {
   const [existingSectionIds, setExistingSectionIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => {
     if (isNew) {
-      setSections([emptySection(0)]);
+      setSections([emptySection([])]);
       return;
     }
     let cancelled = false;
@@ -126,8 +134,24 @@ export function SongEditorPage() {
   }
 
   function addSection() {
-    setSections((prev) => [...prev, emptySection(prev.length)]);
+    setSections((prev) => [...prev, emptySection(prev)]);
   }
+
+  function insertParsedSections(parsed: ParsedSection[], mode: "replace" | "append") {
+    const incoming: EditableSection[] = parsed.map((s) => ({
+      key: makeKey(),
+      type: s.type,
+      title: s.title,
+      lyrics: s.lyrics,
+    }));
+    setSections((prev) => (mode === "replace" ? incoming : [...prev, ...incoming]));
+    toast.success(
+      `Added ${incoming.length} section${incoming.length === 1 ? "" : "s"}.`,
+    );
+  }
+
+  /** Replacing is only offered when there's nothing but an untouched starter section. */
+  const hasContent = sections.some((s) => s.lyrics.trim().length > 0);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -309,10 +333,21 @@ export function SongEditorPage() {
 
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">Song Sections</h2>
-          <Button type="button" variant="outline" size="sm" onClick={addSection}>
-            <Plus className="h-4 w-4" />
-            Add Section
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPasteOpen(true)}
+            >
+              <ClipboardPaste className="h-4 w-4" />
+              Paste whole song
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={addSection}>
+              <Plus className="h-4 w-4" />
+              Add Section
+            </Button>
+          </div>
         </div>
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -333,9 +368,16 @@ export function SongEditorPage() {
 
         {sections.length === 0 && (
           <p className="rounded-md border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-            No sections yet. Add a verse or chorus to get started.
+            No sections yet. Paste a whole song, or add a verse to get started.
           </p>
         )}
+
+        <PasteSongDialog
+          open={pasteOpen}
+          onOpenChange={setPasteOpen}
+          canReplace={hasContent}
+          onInsert={insertParsedSections}
+        />
 
         <div className="mt-6 flex justify-end">
           <Button onClick={handleSave} disabled={saving}>

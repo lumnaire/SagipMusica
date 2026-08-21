@@ -97,37 +97,57 @@ export async function saveSongSections(
     if (error) throw error;
   }
 
-  const results: SongSection[] = [];
-  for (const section of sections) {
-    if (section.id) {
-      const { data, error } = await supabase
-        .from("song_sections")
-        .update({
-          type: section.type,
-          title: section.title,
-          lyrics: section.lyrics,
-          order_index: section.order_index,
-        })
-        .eq("id", section.id)
-        .select()
-        .single();
-      if (error) throw error;
-      results.push(data as SongSection);
-    } else {
-      const { data, error } = await supabase
-        .from("song_sections")
-        .insert({
+  // New sections go in one round trip. Pasting a whole song creates a dozen or
+  // more at once, and a row-at-a-time loop meant a dozen sequential requests
+  // that could fail halfway and leave the song half-saved.
+  //
+  // church_id is deliberately not sent: a database trigger fills it, and the
+  // client's permission to write it was revoked in 0010.
+  const newSections = sections.filter((s) => !s.id);
+  const insertedById = new Map<number, SongSection>();
+
+  if (newSections.length > 0) {
+    const { data, error } = await supabase
+      .from("song_sections")
+      .insert(
+        newSections.map((section) => ({
           song_id: songId,
           type: section.type,
           title: section.title,
           lyrics: section.lyrics,
           order_index: section.order_index,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      results.push(data as SongSection);
+        })),
+      )
+      .select();
+    if (error) throw error;
+    for (const row of (data ?? []) as SongSection[]) {
+      insertedById.set(row.order_index, row);
     }
+  }
+
+  // Existing rows are updated individually: an ordinary edit touches only a
+  // few, and PostgREST has no batch-update-by-id.
+  const results: SongSection[] = [];
+  for (const section of sections) {
+    if (!section.id) {
+      const inserted = insertedById.get(section.order_index);
+      if (inserted) results.push(inserted);
+      continue;
+    }
+
+    const { data, error } = await supabase
+      .from("song_sections")
+      .update({
+        type: section.type,
+        title: section.title,
+        lyrics: section.lyrics,
+        order_index: section.order_index,
+      })
+      .eq("id", section.id)
+      .select()
+      .single();
+    if (error) throw error;
+    results.push(data as SongSection);
   }
 
   return results;
