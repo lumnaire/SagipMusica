@@ -110,12 +110,18 @@ export function MarketingFooter() {
               <ul className="mt-4 space-y-2.5 text-sm">
                 <li>
                   <a
-                    href="https://www.facebook.com/lumnaireph"
-                    target="_blank"
-                    rel="noreferrer"
+                    href="mailto:conenct@lumnaire.com"
+                    className="break-all text-muted-foreground hover:text-foreground"
+                  >
+                    connect@lumnaire.com
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="tel:+639489664935"
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    Lumnaire on Facebook
+                    +63 948 966 4935
                   </a>
                 </li>
               </ul>
