@@ -4,15 +4,33 @@ import type { PresentationSlide } from "@/types/presentation";
 import type { SongWithSections } from "@/types/database";
 
 function slidesFromSong(song: SongWithSections): PresentationSlide[] {
-  return song.sections.map((section) => ({
-    id: `${song.id}:${section.id}`,
+  // Each song opens with a title card, then runs straight through its
+  // sections. The title is not repeated on the lyric slides.
+  const titleSlide: PresentationSlide = {
+    id: `${song.id}:title`,
+    kind: "title",
     songId: song.id,
     songTitle: song.title,
+    songAuthor: song.author,
+    sectionId: "title",
+    sectionType: "custom",
+    sectionTitle: "Title",
+    lyrics: "",
+  };
+
+  const lyricSlides: PresentationSlide[] = song.sections.map((section) => ({
+    id: `${song.id}:${section.id}`,
+    kind: "lyrics",
+    songId: song.id,
+    songTitle: song.title,
+    songAuthor: song.author,
     sectionId: section.id,
     sectionType: section.type,
     sectionTitle: section.title,
     lyrics: section.lyrics,
   }));
+
+  return [titleSlide, ...lyricSlides];
 }
 
 export async function loadSongSlides(songId: string): Promise<{

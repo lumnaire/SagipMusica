@@ -272,7 +272,9 @@ function SectionList({
               )}
             >
               <span className="font-medium">
-                {slide.sectionTitle || SECTION_TYPE_LABELS[slide.sectionType]}
+                {slide.kind === "title"
+                  ? "Title slide"
+                  : slide.sectionTitle || SECTION_TYPE_LABELS[slide.sectionType]}
               </span>
               <span
                 className={cn(
@@ -280,7 +282,7 @@ function SectionList({
                   i === currentIndex ? "text-primary-foreground/75" : "text-muted-foreground",
                 )}
               >
-                {slide.lyrics.split("\n")[0]}
+                {slide.kind === "title" ? slide.songTitle : slide.lyrics.split("\n")[0]}
               </span>
             </button>
           </div>

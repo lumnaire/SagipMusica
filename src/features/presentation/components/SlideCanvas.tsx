@@ -74,7 +74,40 @@ export function SlideCanvas({ slide, style, black, blank }: SlideCanvasProps) {
               />
             )}
 
-            {!blank && slide && scale > 0 && (
+            {!blank && slide && scale > 0 && slide.kind === "title" && (
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center gap-[2%] px-[8%]"
+                style={{
+                  color: style.textColor,
+                  fontFamily: style.fontFamily,
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: style.lyricsFontSize * 1.15 * scale,
+                    lineHeight: 1.15,
+                    fontWeight: 600,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {slide.songTitle}
+                </p>
+                {slide.songAuthor && (
+                  <p
+                    style={{
+                      fontSize: style.titleFontSize * 0.6 * scale,
+                      opacity: 0.65,
+                      fontWeight: 400,
+                    }}
+                  >
+                    {slide.songAuthor}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!blank && slide && scale > 0 && slide.kind === "lyrics" && (
               <div
                 className="absolute inset-0 flex flex-col items-center gap-[2.5%] px-[6%] py-[6%]"
                 style={{

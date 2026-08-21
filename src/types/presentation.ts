@@ -7,8 +7,14 @@ import type { SectionType } from "./database";
  */
 export interface PresentationSlide {
   id: string; // stable id: `${songId}:${sectionId}`
+  /**
+   * "title" is the opening card for a song — song name only, no lyrics.
+   * One is generated per song; every other slide is "lyrics".
+   */
+  kind: "title" | "lyrics";
   songId: string;
   songTitle: string;
+  songAuthor: string | null;
   sectionId: string;
   sectionType: SectionType;
   sectionTitle: string;
@@ -37,7 +43,10 @@ export const DEFAULT_PRESENTATION_STYLE: PresentationStyle = {
   titleFontSize: 56,
   lyricsFontSize: 64,
   textAlign: "center",
-  showTitle: true,
+  // Off: each song already opens with its own title slide, so repeating the
+  // name above every verse only steals room from the words. Turn on under
+  // Display Settings if you want it on each page as well.
+  showTitle: false,
   overlayOpacity: 0.35,
 };
 

@@ -69,8 +69,13 @@ export function PresentationSettingsDialog({
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="show-title">Show song title</Label>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Label htmlFor="show-title">Repeat title on every slide</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Each song already opens with its own title slide.
+              </p>
+            </div>
             <Switch
               id="show-title"
               checked={style.showTitle}
