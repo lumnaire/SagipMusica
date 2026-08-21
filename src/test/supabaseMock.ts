@@ -37,6 +37,18 @@ export function createQueryBuilderMock(response: QueryResponse = { data: [], err
 export function createSupabaseMock(tableResponses: Record<string, QueryResponse> = {}) {
   return {
     from: vi.fn((table: string) => createQueryBuilderMock(tableResponses[table])),
+    // RPCs (superadmin_*, delete_own_account) and Realtime presence channels.
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
+    channel: vi.fn(() => {
+      const ch: Record<string, unknown> = {
+        on: vi.fn(() => ch),
+        subscribe: vi.fn(() => ch),
+        track: vi.fn().mockResolvedValue("ok"),
+        presenceState: vi.fn(() => ({})),
+      };
+      return ch;
+    }),
+    removeChannel: vi.fn().mockResolvedValue("ok"),
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),

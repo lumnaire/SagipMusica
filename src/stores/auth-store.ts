@@ -38,6 +38,15 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   return data as Profile;
 }
 
+/**
+ * Minimum password length. Enforced here rather than only via the form's
+ * `minLength`, which is trivially bypassed. Supabase enforces its own minimum
+ * server-side; keep the two in step (Authentication > Providers > Email).
+ */
+export const MIN_PASSWORD_LENGTH = 8;
+
+const TOO_SHORT = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+
 let initialized = false;
 
 // A session can outlive the account it points to -- e.g. the user (and
@@ -95,6 +104,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signUp: async (email, password, name) => {
     set({ error: null });
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      set({ error: TOO_SHORT });
+      return { error: TOO_SHORT, needsVerification: false };
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -153,6 +166,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   updatePassword: async (password) => {
+    if (password.length < MIN_PASSWORD_LENGTH) return { error: TOO_SHORT };
     const { error } = await supabase.auth.updateUser({ password });
     if (error) return { error: error.message };
     return { error: null };

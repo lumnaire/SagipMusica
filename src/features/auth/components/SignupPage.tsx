@@ -1,17 +1,19 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { MailCheck } from "lucide-react";
-import { useAuthStore } from "@/stores/auth-store";
+import { MIN_PASSWORD_LENGTH, useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { landingPathFor } from "@/lib/auth-routing";
 import { AuthLayout } from "./AuthLayout";
 
 export function SignupPage() {
-  const { status, signUp, signInWithOAuth, resendVerification } = useAuthStore();
+  const { status, profile, signUp, signInWithOAuth, resendVerification } = useAuthStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ export function SignupPage() {
   const [resent, setResent] = useState(false);
 
   if (status === "authenticated") {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={landingPathFor(profile)} replace />;
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -156,15 +158,14 @@ export function SignupPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="new-password"
                 required
-                minLength={6}
+                minLength={MIN_PASSWORD_LENGTH}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
               />
             </div>
             {formError && (

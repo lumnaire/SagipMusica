@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
+import { landingPathFor } from "@/lib/auth-routing";
 import { LandingPage } from "./LandingPage";
 
 export function RootRoute() {
@@ -11,7 +12,7 @@ export function RootRoute() {
   }
 
   if (status === "authenticated") {
-    return <Navigate to={profile?.church_id ? "/dashboard" : "/onboarding"} replace />;
+    return <Navigate to={landingPathFor(profile)} replace />;
   }
 
   return <LandingPage />;

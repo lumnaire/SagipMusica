@@ -36,8 +36,12 @@ export function SlideCanvas({ slide, style, black, blank }: SlideCanvasProps) {
           position: "relative",
           overflow: "hidden",
           background: style.backgroundColor,
+          // encodeURI so a ")" in the value can't close url() and inject
+          // further CSS. Nothing writes this field today, but it is declared
+          // on PresentationStyle and would become user-supplied the moment a
+          // custom-background feature ships.
           backgroundImage: style.backgroundImageUrl
-            ? `url(${style.backgroundImageUrl})`
+            ? `url("${encodeURI(style.backgroundImageUrl)}")`
             : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",

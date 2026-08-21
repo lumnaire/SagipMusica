@@ -13,5 +13,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    // PKCE rather than the implicit default: the OAuth provider returns a
+    // one-time code that is exchanged for tokens, instead of putting the
+    // tokens themselves in the URL fragment where they land in history and
+    // can leak through referrers.
+    flowType: "pkce",
   },
 });

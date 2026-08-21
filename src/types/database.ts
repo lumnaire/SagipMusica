@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "presenter";
+export type UserRole = "admin" | "presenter" | "superadmin";
 
 export type SectionType =
   | "verse"

@@ -3,6 +3,8 @@ import { RootRoute } from "@/features/marketing/components/RootRoute";
 import { LoginPage } from "@/features/auth/components/LoginPage";
 import { SignupPage } from "@/features/auth/components/SignupPage";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
+import { SuperAdminRoute } from "@/features/auth/components/SuperAdminRoute";
+import { SuperAdminPage } from "@/features/superadmin/components/SuperAdminPage";
 import { TermsPage } from "@/features/legal/components/TermsPage";
 import { PrivacyPage } from "@/features/legal/components/PrivacyPage";
 import { CookiePolicyPage } from "@/features/legal/components/CookiePolicyPage";
@@ -28,6 +30,15 @@ export function AppRoutes() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/cookies" element={<CookiePolicyPage />} />
+
+      <Route
+        path="/superadmin"
+        element={
+          <SuperAdminRoute>
+            <SuperAdminPage />
+          </SuperAdminRoute>
+        }
+      />
 
       <Route
         path="/onboarding"

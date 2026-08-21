@@ -23,6 +23,7 @@ function renderAt(path: string, requireRole?: Profile["role"], requireChurch?: b
         <Route path="/dashboard" element={<div>dashboard page</div>} />
         <Route path="/login" element={<div>login page</div>} />
         <Route path="/onboarding" element={<div>onboarding page</div>} />
+        <Route path="/superadmin" element={<div>superadmin page</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -114,6 +115,46 @@ describe("ProtectedRoute", () => {
 
     expect(screen.getByText("onboarding page")).toBeInTheDocument();
     expect(screen.queryByText("secret content")).not.toBeInTheDocument();
+  });
+
+  it("sends a superadmin to /superadmin instead of a church route", () => {
+    useAuthStore.setState({
+      status: "authenticated",
+      session: { user: { email: "ops@lumnaire.com" } } as never,
+      profile: {
+        id: "u4",
+        church_id: null,
+        email: "ops@lumnaire.com",
+        name: null,
+        role: "superadmin",
+        onboarding_completed: false,
+      } as Profile,
+    });
+    renderAt("/protected");
+
+    // Not /onboarding: a superadmin has no church and must never be pushed
+    // into creating one.
+    expect(screen.getByText("superadmin page")).toBeInTheDocument();
+    expect(screen.queryByText("onboarding page")).not.toBeInTheDocument();
+    expect(screen.queryByText("secret content")).not.toBeInTheDocument();
+  });
+
+  it("sends a superadmin to /superadmin even on an admin-only route", () => {
+    useAuthStore.setState({
+      status: "authenticated",
+      session: { user: { email: "ops@lumnaire.com" } } as never,
+      profile: {
+        id: "u4",
+        church_id: null,
+        email: "ops@lumnaire.com",
+        name: null,
+        role: "superadmin",
+        onboarding_completed: false,
+      } as Profile,
+    });
+    renderAt("/protected", "admin");
+
+    expect(screen.getByText("superadmin page")).toBeInTheDocument();
   });
 
   it("does not redirect to /onboarding when requireChurch is false", () => {

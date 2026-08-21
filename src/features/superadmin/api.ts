@@ -1,0 +1,45 @@
+import { supabase } from "@/lib/supabase/client";
+import type { UserRole } from "@/types/database";
+
+export interface PlatformStats {
+  total_accounts: number;
+  total_churches: number;
+  total_songs: number;
+  total_worship_sets: number;
+}
+
+export interface PlatformAccount {
+  id: string;
+  email: string;
+  name: string | null;
+  role: UserRole;
+  church_id: string | null;
+  church_name: string | null;
+  onboarding_completed: boolean;
+  created_at: string;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+}
+
+// Each of these is a SECURITY DEFINER function that re-checks is_superadmin()
+// server-side, so a non-superadmin calling them directly gets "Not authorised"
+// rather than data. See supabase/migrations/0011_superadmin.sql.
+
+export async function fetchPlatformStats(): Promise<PlatformStats> {
+  const { data, error } = await supabase.rpc("superadmin_stats");
+  if (error) throw error;
+  return data as unknown as PlatformStats;
+}
+
+export async function fetchPlatformAccounts(): Promise<PlatformAccount[]> {
+  const { data, error } = await supabase.rpc("superadmin_list_accounts");
+  if (error) throw error;
+  return (data ?? []) as PlatformAccount[];
+}
+
+export async function deletePlatformAccount(targetId: string): Promise<void> {
+  const { error } = await supabase.rpc("superadmin_delete_user", {
+    target_id: targetId,
+  });
+  if (error) throw error;
+}

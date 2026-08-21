@@ -3,14 +3,16 @@ import { Navigate, useLocation, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { landingPathFor } from "@/lib/auth-routing";
 import { AuthLayout } from "./AuthLayout";
 
 export function LoginPage() {
-  const { status, signIn, signInWithOAuth } = useAuthStore();
+  const { status, profile, signIn, signInWithOAuth } = useAuthStore();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +21,10 @@ export function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   if (status === "authenticated") {
-    const redirectTo = (location.state as { from?: string } | null)?.from ?? "/dashboard";
+    // A superadmin has no church, so send them to their own dashboard
+    // rather than through the church onboarding gate.
+    const redirectTo =
+      (location.state as { from?: string } | null)?.from ?? landingPathFor(profile);
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -85,9 +90,8 @@ export function LoginPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 required
                 value={password}

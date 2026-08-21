@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -17,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useAuthStore } from "@/stores/auth-store";
+import { MIN_PASSWORD_LENGTH, useAuthStore } from "@/stores/auth-store";
 import { useChurchStore } from "@/stores/church-store";
 
 export function SettingsPage() {
@@ -235,16 +236,18 @@ export function SettingsPage() {
             <form className="flex flex-col gap-1.5" onSubmit={handlePasswordSubmit}>
               <Label htmlFor="account-password">New password</Label>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Input
+                <PasswordInput
                   id="account-password"
-                  type="password"
                   autoComplete="new-password"
-                  minLength={6}
+                  minLength={MIN_PASSWORD_LENGTH}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
                 />
-                <Button type="submit" disabled={busy === "password" || password.length < 6}>
+                <Button
+                  type="submit"
+                  disabled={busy === "password" || password.length < MIN_PASSWORD_LENGTH}
+                >
                   {busy === "password" ? "Saving..." : "Update"}
                 </Button>
               </div>

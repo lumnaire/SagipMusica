@@ -11,3 +11,18 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# Security headers. These mirror the `headers` block in vercel.json -- keep the
+# two in step. Vercel ignores this file; it applies when hosting on Apache.
+#
+# Note there is no `script-src 'unsafe-inline'`: that restriction is what makes
+# the policy worth having, since the Supabase session lives in localStorage and
+# would be readable by any injected script.
+<IfModule mod_headers.c>
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://rjyqlrylvisybdggxitv.supabase.co wss://rjyqlrylvisybdggxitv.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>

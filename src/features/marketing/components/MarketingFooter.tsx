@@ -110,7 +110,7 @@ export function MarketingFooter() {
               <ul className="mt-4 space-y-2.5 text-sm">
                 <li>
                   <a
-                    href="mailto:conenct@lumnaire.com"
+                    href="mailto:connect@lumnaire.com"
                     className="break-all text-muted-foreground hover:text-foreground"
                   >
                     connect@lumnaire.com
