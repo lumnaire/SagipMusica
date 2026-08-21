@@ -30,31 +30,33 @@ export function CookieBanner() {
         <div
           role="dialog"
           aria-label="Cookie preferences"
-          className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-card/95 p-4 shadow-2xl backdrop-blur-md sm:p-5"
+          className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-card/95 p-3 shadow-2xl backdrop-blur-md sm:p-5"
         >
-          <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex gap-3">
               <Cookie className="mt-0.5 hidden h-5 w-5 shrink-0 text-primary sm:block" />
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                We use storage that's needed to keep you signed in. We'd also
-                like optional cookies to understand how SagipMusica is used —
-                only if you agree. Read our{" "}
+              <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                We use storage needed to keep you signed in, plus optional
+                cookies to understand how SagipMusica is used — only if you
+                agree.{" "}
                 <Link to="/cookies" className="font-medium text-primary hover:underline">
                   Cookie Policy
                 </Link>
-                .
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-wrap gap-2">
+            {/* Equal-width on phones so all three stay comfortably tappable. */}
+            <div className="grid shrink-0 grid-cols-3 gap-2 sm:flex sm:gap-2">
               <Button variant="ghost" size="sm" onClick={openCustomize}>
                 Customize
               </Button>
               <Button variant="outline" size="sm" onClick={rejectAll}>
-                Reject optional
+                <span className="sm:hidden">Reject</span>
+                <span className="hidden sm:inline">Reject optional</span>
               </Button>
               <Button size="sm" onClick={acceptAll}>
-                Accept all
+                <span className="sm:hidden">Accept</span>
+                <span className="hidden sm:inline">Accept all</span>
               </Button>
             </div>
           </div>

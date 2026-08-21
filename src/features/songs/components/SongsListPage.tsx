@@ -141,11 +141,11 @@ export function SongsListPage() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Songs</h1>
+            <h1 className="font-display text-2xl text-foreground">Songs</h1>
             <p className="text-sm text-muted-foreground">Manage your church's hymnal.</p>
           </div>
           {isAdmin && (
-            <Button onClick={() => navigate("/songs/new")}>
+            <Button className="w-full sm:w-auto" onClick={() => navigate("/songs/new")}>
               <Plus className="h-4 w-4" />
               Add Song
             </Button>
@@ -200,7 +200,7 @@ export function SongsListPage() {
             </SelectContent>
           </Select>
           <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-            <SelectTrigger className="sm:w-48" aria-label="Sort songs">
+            <SelectTrigger className="sm:w-48 lg:w-52" aria-label="Sort songs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -229,13 +229,16 @@ export function SongsListPage() {
           <div className="overflow-hidden rounded-lg border border-border bg-card">
             <Table>
               <TableHeader>
+                {/* Secondary columns drop away as the screen narrows, so a
+                    phone shows the song and its actions instead of a table
+                    that has to be scrolled sideways to be useful. */}
                 <TableRow>
                   <TableHead>Title</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Key</TableHead>
-                  <TableHead>Sections</TableHead>
-                  <TableHead>Updated</TableHead>
+                  <TableHead className="hidden md:table-cell">Author</TableHead>
+                  <TableHead className="hidden lg:table-cell">Category</TableHead>
+                  <TableHead className="hidden xl:table-cell">Key</TableHead>
+                  <TableHead className="hidden xl:table-cell">Sections</TableHead>
+                  <TableHead className="hidden lg:table-cell">Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -244,17 +247,32 @@ export function SongsListPage() {
                   <TableRow key={song.id}>
                     <TableCell className="font-medium text-foreground">
                       <div className="flex items-center gap-2">
-                        <Music2 className="h-4 w-4 text-muted-foreground" />
-                        {song.title}
+                        <Music2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <span className="block truncate">{song.title}</span>
+                          {/* Author folds under the title once its own
+                              column is hidden, so it isn't simply lost. */}
+                          {song.author && (
+                            <span className="block truncate text-xs font-normal text-muted-foreground md:hidden">
+                              {song.author}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{song.author || "—"}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
+                      {song.author || "—"}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {song.category ? <Badge variant="secondary">{song.category}</Badge> : "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{song.key || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{song.section_count}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden text-muted-foreground xl:table-cell">
+                      {song.key || "—"}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground xl:table-cell">
+                      {song.section_count}
+                    </TableCell>
+                    <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
                       {formatDistanceToNow(new Date(song.updated_at), { addSuffix: true })}
                     </TableCell>
                     <TableCell className="text-right">

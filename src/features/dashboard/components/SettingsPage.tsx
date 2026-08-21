@@ -127,7 +127,7 @@ export function SettingsPage() {
           <CardContent className="flex flex-col gap-5">
             <form className="flex flex-col gap-1.5" onSubmit={handleChurchSubmit}>
               <Label htmlFor="church-name">Church name</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   id="church-name"
                   value={churchName}
@@ -150,7 +150,7 @@ export function SettingsPage() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="accent-color">Accent colour</Label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <input
                   id="accent-color"
                   type="color"
@@ -163,10 +163,11 @@ export function SettingsPage() {
                   value={color}
                   disabled={!isAdmin}
                   onChange={(e) => setColor(e.target.value)}
-                  className="w-32 uppercase"
+                  className="w-28 uppercase sm:w-32"
                   aria-label="Accent colour hex value"
                 />
                 <Button
+                  className="w-full sm:w-auto"
                   onClick={() =>
                     runAction("color", () => updateAccentColor(color), "Colour updated.")
                   }
@@ -187,7 +188,7 @@ export function SettingsPage() {
           <CardContent>
             <form className="flex flex-col gap-1.5" onSubmit={handleProfileSubmit}>
               <Label htmlFor="profile-name">Name</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   id="profile-name"
                   value={name}
@@ -215,7 +216,7 @@ export function SettingsPage() {
           <CardContent className="flex flex-col gap-5">
             <form className="flex flex-col gap-1.5" onSubmit={handleEmailSubmit}>
               <Label htmlFor="account-email">Email</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   id="account-email"
                   type="email"
@@ -233,7 +234,7 @@ export function SettingsPage() {
 
             <form className="flex flex-col gap-1.5" onSubmit={handlePasswordSubmit}>
               <Label htmlFor="account-password">New password</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   id="account-password"
                   type="password"

@@ -136,9 +136,9 @@ export function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-foreground">
+      <div className="mx-auto max-w-6xl 2xl:max-w-7xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-display text-2xl text-foreground sm:text-3xl">
             {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -146,7 +146,9 @@ export function DashboardPage() {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Two-up on phones: these tiles are small, and one per row would
+            push the real content below the fold. */}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             icon={Music2}
             label="Total Songs"
@@ -280,15 +282,17 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <Icon className="h-4 w-4 text-primary" />
+      <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 pb-2">
+        <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+          {label}
+        </CardTitle>
+        <Icon className="h-4 w-4 shrink-0 text-primary" />
       </CardHeader>
       <CardContent>
         {loading ? (
           <Skeleton className="h-8 w-16" />
         ) : (
-          <p className="text-3xl font-semibold text-foreground">{value ?? 0}</p>
+          <p className="text-2xl font-semibold text-foreground sm:text-3xl">{value ?? 0}</p>
         )}
       </CardContent>
     </Card>

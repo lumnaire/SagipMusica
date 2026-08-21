@@ -135,32 +135,36 @@ export function PresenterView() {
 
   return (
     <div className="flex h-svh flex-col bg-muted/30">
-      <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/sets")}>
+      <header className="flex items-center justify-between gap-2 border-b border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate("/sets")}>
             <X className="h-4 w-4" />
           </Button>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{title || "Presentation"}</p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {title || "Presentation"}
+            </p>
             <p className="text-xs text-muted-foreground">
               {slides.length > 0 ? `Slide ${currentIndex + 1} of ${slides.length}` : "No slides"}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
             <Settings2 className="h-4 w-4" />
-            Display Settings
+            <span className="hidden lg:inline">Display Settings</span>
           </Button>
           <Button variant="outline" size="sm" onClick={openProjector}>
             <MonitorPlay className="h-4 w-4" />
-            Open Projector View
+            <span className="hidden lg:inline">Open Projector View</span>
           </Button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-72 shrink-0 overflow-y-auto border-r border-border bg-background">
+      {/* Below `lg` the section list sits above the preview rather than beside
+          it — a fixed 18rem rail would leave almost nothing for the slide. */}
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        <aside className="max-h-40 shrink-0 overflow-y-auto border-b border-border bg-background lg:max-h-none lg:w-72 lg:border-b-0 lg:border-r">
           {loading ? (
             <div className="space-y-2 p-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -172,7 +176,7 @@ export function PresenterView() {
           )}
         </aside>
 
-        <main className="flex flex-1 flex-col gap-4 p-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 p-3 sm:p-4">
           <div ref={previewRef} className="flex-1 overflow-hidden rounded-lg border border-border bg-black">
             <SlideCanvas
               slide={currentSlide}
@@ -184,27 +188,27 @@ export function PresenterView() {
         </main>
       </div>
 
-      <footer className="flex items-center justify-between gap-3 border-t border-border bg-background px-4 py-3">
+      <footer className="flex items-center justify-between gap-2 border-t border-border bg-background px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
         <Button variant="outline" onClick={previous} disabled={currentIndex <= 0}>
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          <span className="hidden sm:inline">Previous</span>
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             variant={displayMode === "black" ? "default" : "outline"}
             onClick={toggleBlack}
             className={cn(displayMode === "black" && "bg-neutral-900 hover:bg-neutral-800")}
           >
             <EyeOff className="h-4 w-4" />
-            Black
+            <span className="hidden sm:inline">Black</span>
           </Button>
           <Button
             variant={displayMode === "live" ? "default" : "outline"}
             onClick={() => usePresentationStore.getState().setDisplayMode("live")}
           >
             <Eye className="h-4 w-4" />
-            Live
+            <span className="hidden sm:inline">Live</span>
           </Button>
           <Button variant="outline" size="icon" onClick={toggleFullscreen} title="Fullscreen (F)">
             <Maximize className="h-4 w-4" />
@@ -216,7 +220,7 @@ export function PresenterView() {
           onClick={next}
           disabled={currentIndex >= slides.length - 1}
         >
-          Next
+          <span className="hidden sm:inline">Next</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </footer>

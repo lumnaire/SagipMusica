@@ -63,14 +63,14 @@ export function WorshipSetsListPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-5xl">
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Worship Sets</h1>
+            <h1 className="font-display text-2xl text-foreground">Worship Sets</h1>
             <p className="text-sm text-muted-foreground">
               Group songs into a service order, ready to present.
             </p>
           </div>
-          <Button onClick={() => navigate("/sets/new")}>
+          <Button className="w-full sm:w-auto" onClick={() => navigate("/sets/new")}>
             <Plus className="h-4 w-4" />
             Create Worship Set
           </Button>

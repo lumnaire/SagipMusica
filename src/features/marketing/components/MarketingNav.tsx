@@ -33,21 +33,25 @@ export function MarketingNav({ solid = false }: { solid?: boolean }) {
           : "border-b border-transparent",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={sagipmusicaLogo} alt="" className="h-8 w-8 object-contain" />
-          <span className="font-display text-lg text-white">SagipMusica</span>
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <Link to="/" className="flex min-w-0 items-center gap-2.5">
+          <img src={sagipmusicaLogo} alt="SagipMusica" className="h-8 w-8 shrink-0 object-contain" />
+          {/* Wordmark drops below `xs`, where it would crowd the actions. */}
+          <span className="hidden font-display text-lg text-white xs:inline">
+            SagipMusica
+          </span>
         </Link>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <Button
             asChild
             variant="ghost"
-            className="text-white hover:bg-white/15 hover:text-white"
+            size="sm"
+            className="text-white hover:bg-white/15 hover:text-white sm:h-10 sm:px-4"
           >
             <Link to="/login">Sign in</Link>
           </Button>
-          <Button asChild>
+          <Button asChild size="sm" className="sm:h-10 sm:px-4">
             <Link to="/signup">Get started</Link>
           </Button>
         </div>
