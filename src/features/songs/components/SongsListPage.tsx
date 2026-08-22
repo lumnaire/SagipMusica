@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -9,8 +9,6 @@ import {
   Pencil,
   Trash2,
   PlayCircle,
-  ChevronLeft,
-  ChevronRight,
   Library,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -43,6 +41,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PaginationFooter } from "@/components/ui/pagination";
+import { usePagination } from "@/hooks/usePagination";
 import { useSongs } from "@/features/songs/hooks/useSongs";
 import { deleteSong } from "@/features/songs/api";
 import { SONG_CATEGORIES } from "@/types/database";
@@ -67,7 +67,6 @@ export function SongsListPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("category") ?? "all");
   const [sort, setSort] = useState<SortOption>("title-asc");
-  const [page, setPage] = useState(1);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const showCategories = searchParams.get("view") === "categories";
 
@@ -113,15 +112,12 @@ export function SongsListPage() {
     return sorted;
   }, [songs, search, category, sort]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  // Any change to the result set should put the reader back at the first page,
-  // otherwise a narrowed search can strand them on an empty one.
-  useEffect(() => {
-    setPage(1);
-  }, [search, category, sort]);
+  const {
+    visible,
+    page: currentPage,
+    pageCount,
+    setPage,
+  } = usePagination(filtered, PAGE_SIZE, `${search}|${category}|${sort}`);
 
   async function handleDelete() {
     if (!pendingDeleteId) return;
@@ -340,39 +336,13 @@ export function SongsListPage() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              Showing {(currentPage - 1) * PAGE_SIZE + 1}–
-              {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} song
-              {filtered.length === 1 ? "" : "s"}
-            </p>
-
-            {pageCount > 1 && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <span className="px-1 text-sm text-muted-foreground">
-                  Page {currentPage} of {pageCount}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage === pageCount}
-                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+          <PaginationFooter
+            page={currentPage}
+            pageCount={pageCount}
+            pageSize={PAGE_SIZE}
+            total={filtered.length}
+            onPageChange={setPage}
+          />
         )}
       </div>
 

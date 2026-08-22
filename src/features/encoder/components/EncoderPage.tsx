@@ -48,10 +48,38 @@ import {
   setTemplateStatus,
   type TemplateListItem,
 } from "@/features/encoder/api";
+import { PaginationFooter } from "@/components/ui/pagination";
+import { usePagination } from "@/hooks/usePagination";
 import { SONG_CATEGORIES } from "@/types/database";
 import { EncoderShell } from "./EncoderShell";
 
 type StatusFilter = "all" | "published" | "draft";
+
+const PAGE_SIZE = 15;
+
+type MissingField = "lyrics" | "author" | "composer" | "key" | "tempo" | "category";
+
+/**
+ * The encoder's work queues. The FBC import (0013) could only carry what its
+ * source JSON held — title, author, category and lyrics — so composer, key and
+ * tempo arrived empty on all 399 hymns. Filling those gaps is the day-to-day
+ * job, and these make each gap one click away.
+ *
+ * `!t.field` deliberately catches both null and "": a song saved with the field
+ * cleared is just as unfinished as one that never had it.
+ */
+const MISSING_FILTERS: {
+  id: MissingField;
+  label: string;
+  isMissing: (t: TemplateListItem) => boolean;
+}[] = [
+  { id: "lyrics", label: "No lyrics", isMissing: (t) => t.section_count === 0 },
+  { id: "author", label: "No author", isMissing: (t) => !t.author },
+  { id: "composer", label: "No composer", isMissing: (t) => !t.composer },
+  { id: "key", label: "No key", isMissing: (t) => !t.key },
+  { id: "tempo", label: "No tempo", isMissing: (t) => !t.tempo },
+  { id: "category", label: "No category", isMissing: (t) => !t.category },
+];
 
 export function EncoderPage() {
   const navigate = useNavigate();
@@ -60,6 +88,7 @@ export function EncoderPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [category, setCategory] = useState("all");
+  const [missing, setMissing] = useState<MissingField[]>([]);
   const [pendingDelete, setPendingDelete] = useState<TemplateListItem | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -123,7 +152,11 @@ export function EncoderPage() {
     }
   }
 
-  const filtered = useMemo(() => {
+  // Everything except the missing-chips. Kept separate so the chip counts can
+  // be faceted: each number says how many rows that chip would surface *here*,
+  // under the category and search already in force, rather than a fixed total
+  // that ignores the filters sitting next to it.
+  const base = useMemo(() => {
     const q = search.toLowerCase();
     return templates.filter((t) => {
       const matchesSearch =
@@ -135,6 +168,33 @@ export function EncoderPage() {
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [templates, search, status, category]);
+
+  const counts = useMemo(() => {
+    const out = {} as Record<MissingField, number>;
+    for (const f of MISSING_FILTERS) out[f.id] = base.filter(f.isMissing).length;
+    return out;
+  }, [base]);
+
+  // Union, not intersection: two chips on means "missing either", so the list
+  // reads as a triage queue rather than narrowing to the songs unlucky enough
+  // to be missing both.
+  const filtered = useMemo(() => {
+    if (missing.length === 0) return base;
+    const active = MISSING_FILTERS.filter((f) => missing.includes(f.id));
+    return base.filter((t) => active.some((f) => f.isMissing(t)));
+  }, [base, missing]);
+
+  const { visible, page, pageCount, setPage } = usePagination(
+    filtered,
+    PAGE_SIZE,
+    `${search}|${status}|${category}|${missing.join(",")}`,
+  );
+
+  function toggleMissing(id: MissingField) {
+    setMissing((prev) =>
+      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
+    );
+  }
 
   const publishedCount = templates.filter((t) => t.status === "published").length;
   const draftCount = templates.length - publishedCount;
@@ -198,6 +258,36 @@ export function EncoderPage() {
         </Select>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Needs work:</span>
+        {MISSING_FILTERS.map((f) => {
+          const active = missing.includes(f.id);
+          return (
+            <Button
+              key={f.id}
+              type="button"
+              variant={active ? "default" : "outline"}
+              size="sm"
+              aria-pressed={active}
+              onClick={() => toggleMissing(f.id)}
+            >
+              {f.label}
+              <span className="ml-1 tabular-nums opacity-70">{counts[f.id]}</span>
+            </Button>
+          );
+        })}
+        {missing.length > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setMissing([])}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -239,7 +329,7 @@ export function EncoderPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => {
+              {visible.map((t) => {
                 const busy = busyId === t.id;
                 const published = t.status === "published";
                 return (
@@ -334,10 +424,13 @@ export function EncoderPage() {
       )}
 
       {!loading && filtered.length > 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">
-          Showing {filtered.length} of {templates.length} song
-          {templates.length === 1 ? "" : "s"}
-        </p>
+        <PaginationFooter
+          page={page}
+          pageCount={pageCount}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       )}
 
       <AlertDialog
