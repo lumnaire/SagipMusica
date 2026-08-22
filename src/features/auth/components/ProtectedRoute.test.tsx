@@ -24,6 +24,7 @@ function renderAt(path: string, requireRole?: Profile["role"], requireChurch?: b
         <Route path="/login" element={<div>login page</div>} />
         <Route path="/onboarding" element={<div>onboarding page</div>} />
         <Route path="/superadmin" element={<div>superadmin page</div>} />
+        <Route path="/encoder" element={<div>encoder page</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -155,6 +156,47 @@ describe("ProtectedRoute", () => {
     renderAt("/protected", "admin");
 
     expect(screen.getByText("superadmin page")).toBeInTheDocument();
+  });
+
+  it("sends an encoder to /encoder instead of a church route", () => {
+    useAuthStore.setState({
+      status: "authenticated",
+      session: { user: { email: "encoder@lumnaire.com" } } as never,
+      profile: {
+        id: "u5",
+        church_id: null,
+        email: "encoder@lumnaire.com",
+        name: null,
+        role: "encoder",
+        onboarding_completed: false,
+      } as Profile,
+    });
+    renderAt("/protected");
+
+    // Same reasoning as the superadmin case: an encoder has no church and must
+    // never be pushed into creating one.
+    expect(screen.getByText("encoder page")).toBeInTheDocument();
+    expect(screen.queryByText("onboarding page")).not.toBeInTheDocument();
+    expect(screen.queryByText("secret content")).not.toBeInTheDocument();
+  });
+
+  it("sends an encoder to /encoder even on an admin-only route", () => {
+    useAuthStore.setState({
+      status: "authenticated",
+      session: { user: { email: "encoder@lumnaire.com" } } as never,
+      profile: {
+        id: "u5",
+        church_id: null,
+        email: "encoder@lumnaire.com",
+        name: null,
+        role: "encoder",
+        onboarding_completed: false,
+      } as Profile,
+    });
+    renderAt("/protected", "admin");
+
+    expect(screen.getByText("encoder page")).toBeInTheDocument();
+    expect(screen.queryByText("secret content")).not.toBeInTheDocument();
   });
 
   it("does not redirect to /onboarding when requireChurch is false", () => {

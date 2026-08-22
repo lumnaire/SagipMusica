@@ -17,6 +17,7 @@ export function createQueryBuilderMock(response: QueryResponse = { data: [], err
     "upsert",
     "eq",
     "in",
+    "not",
     "order",
     "limit",
     "single",

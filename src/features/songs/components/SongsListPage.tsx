@@ -11,6 +11,7 @@ import {
   PlayCircle,
   ChevronLeft,
   ChevronRight,
+  Library,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -145,10 +146,20 @@ export function SongsListPage() {
             <p className="text-sm text-muted-foreground">Manage your church's hymnal.</p>
           </div>
           {isAdmin && (
-            <Button className="w-full sm:w-auto" onClick={() => navigate("/songs/new")}>
-              <Plus className="h-4 w-4" />
-              Add Song
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => navigate("/songs/library")}
+              >
+                <Library className="h-4 w-4" />
+                Browse library
+              </Button>
+              <Button className="w-full sm:w-auto" onClick={() => navigate("/songs/new")}>
+                <Plus className="h-4 w-4" />
+                Add Song
+              </Button>
+            </div>
           )}
         </div>
 

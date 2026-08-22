@@ -11,6 +11,8 @@ import {
   Trash2,
   LogOut,
   ShieldCheck,
+  Library,
+  UserCog,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,8 @@ import {
   deletePlatformAccount,
   fetchPlatformAccounts,
   fetchPlatformStats,
+  setAccountRole,
+  type AssignableRole,
   type PlatformAccount,
   type PlatformStats,
 } from "@/features/superadmin/api";
@@ -59,6 +63,11 @@ export function SuperAdminPage() {
   const [presenceStatus, setPresenceStatus] = useState<PresenceStatus>("idle");
   const [pendingDelete, setPendingDelete] = useState<PlatformAccount | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [pendingRole, setPendingRole] = useState<{
+    account: PlatformAccount;
+    role: AssignableRole;
+  } | null>(null);
+  const [changingRole, setChangingRole] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -109,6 +118,26 @@ export function SuperAdminPage() {
     }
   }
 
+  async function handleRoleChange() {
+    if (!pendingRole) return;
+    setChangingRole(true);
+    try {
+      await setAccountRole(pendingRole.account.id, pendingRole.role);
+      toast.success(
+        pendingRole.role === "encoder"
+          ? `${pendingRole.account.email} is now a song encoder.`
+          : `${pendingRole.account.email} is no longer a song encoder.`,
+      );
+      setPendingRole(null);
+      await load();
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Couldn't change that role.");
+    } finally {
+      setChangingRole(false);
+    }
+  }
+
   const filtered = accounts.filter((a) => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -151,7 +180,7 @@ export function SuperAdminPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-6">
           <StatCard icon={Users} label="Accounts" value={stats?.total_accounts} loading={loading} />
           <StatCard icon={Church} label="Churches" value={stats?.total_churches} loading={loading} />
           <StatCard icon={Music2} label="Songs" value={stats?.total_songs} loading={loading} />
@@ -159,6 +188,12 @@ export function SuperAdminPage() {
             icon={ListMusic}
             label="Worship sets"
             value={stats?.total_worship_sets}
+            loading={loading}
+          />
+          <StatCard
+            icon={Library}
+            label="Library songs"
+            value={stats?.total_library_songs}
             loading={loading}
           />
           <StatCard
@@ -195,6 +230,14 @@ export function SuperAdminPage() {
             />
           </div>
 
+          <p className="mb-4 rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+            <strong className="text-foreground">Adding a song encoder:</strong> have them sign up
+            and verify their email, but <strong>stop before onboarding</strong> — an encoder must
+            not create a church. A <em>Make encoder</em> button then appears on their row below.
+            Accounts that already own a church can't become encoders, because demoting them would
+            leave that church with nobody able to edit its songs.
+          </p>
+
           {loading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -222,6 +265,10 @@ export function SuperAdminPage() {
                   {filtered.map((account) => {
                     const isSelf = account.id === profile?.id;
                     const isSuper = account.role === "superadmin";
+                    const isEncoder = account.role === "encoder";
+                    // Mirrors superadmin_set_role's guards, so the button is
+                    // only offered where the function would actually succeed.
+                    const canChangeRole = !isSelf && !isSuper && !account.church_id;
                     return (
                       <TableRow key={account.id}>
                         <TableCell>
@@ -258,22 +305,43 @@ export function SuperAdminPage() {
                             : "Never"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            title={
-                              isSelf
-                                ? "You can't delete your own account here"
-                                : isSuper
-                                  ? "Superadmin accounts can't be deleted here"
-                                  : "Delete account"
-                            }
-                            disabled={isSelf || isSuper}
-                            onClick={() => setPendingDelete(account)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {/* Rendered only where it would actually succeed. A
+                                permanently-disabled icon here read as "missing
+                                feature" rather than "not eligible". */}
+                            {canChangeRole && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 whitespace-nowrap"
+                                onClick={() =>
+                                  setPendingRole({
+                                    account,
+                                    role: isEncoder ? "presenter" : "encoder",
+                                  })
+                                }
+                              >
+                                <UserCog className="h-4 w-4" />
+                                {isEncoder ? "Remove encoder" : "Make encoder"}
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              title={
+                                isSelf
+                                  ? "You can't delete your own account here"
+                                  : isSuper
+                                    ? "Superadmin accounts can't be deleted here"
+                                    : "Delete account"
+                              }
+                              disabled={isSelf || isSuper}
+                              onClick={() => setPendingDelete(account)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -291,6 +359,51 @@ export function SuperAdminPage() {
           )}
         </section>
       </main>
+
+      <AlertDialog
+        open={!!pendingRole}
+        onOpenChange={(open) => !open && !changingRole && setPendingRole(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingRole?.role === "encoder"
+                ? "Make this account a song encoder?"
+                : "Remove encoder access?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRole?.role === "encoder" ? (
+                <>
+                  <strong>{pendingRole?.account.email}</strong> will be able to add and publish
+                  songs to the shared library that every church can draw from. They will not be
+                  able to see or edit any church's own songs.
+                </>
+              ) : (
+                <>
+                  <strong>{pendingRole?.account.email}</strong> will lose access to the library
+                  editor. Songs they already published stay in the library.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={changingRole}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                void handleRoleChange();
+              }}
+              disabled={changingRole}
+            >
+              {changingRole
+                ? "Saving..."
+                : pendingRole?.role === "encoder"
+                  ? "Make encoder"
+                  : "Remove access"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={!!pendingDelete}

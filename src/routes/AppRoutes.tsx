@@ -5,6 +5,9 @@ import { SignupPage } from "@/features/auth/components/SignupPage";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { SuperAdminRoute } from "@/features/auth/components/SuperAdminRoute";
 import { SuperAdminPage } from "@/features/superadmin/components/SuperAdminPage";
+import { EncoderRoute } from "@/features/auth/components/EncoderRoute";
+import { EncoderPage } from "@/features/encoder/components/EncoderPage";
+import { TemplateEditorPage } from "@/features/encoder/components/TemplateEditorPage";
 import { TermsPage } from "@/features/legal/components/TermsPage";
 import { PrivacyPage } from "@/features/legal/components/PrivacyPage";
 import { CookiePolicyPage } from "@/features/legal/components/CookiePolicyPage";
@@ -12,6 +15,7 @@ import { OnboardingPage } from "@/features/onboarding/components/OnboardingPage"
 import { DashboardPage } from "@/features/dashboard/components/DashboardPage";
 import { SettingsPage } from "@/features/dashboard/components/SettingsPage";
 import { SongsListPage } from "@/features/songs/components/SongsListPage";
+import { SongLibraryPage } from "@/features/songs/components/SongLibraryPage";
 import { SongPreviewPage } from "@/features/songs/components/SongPreviewPage";
 import { SongEditorPage } from "@/features/song-editor/components/SongEditorPage";
 import { WorshipSetsListPage } from "@/features/worship-sets/components/WorshipSetsListPage";
@@ -37,6 +41,31 @@ export function AppRoutes() {
           <SuperAdminRoute>
             <SuperAdminPage />
           </SuperAdminRoute>
+        }
+      />
+
+      <Route
+        path="/encoder"
+        element={
+          <EncoderRoute>
+            <EncoderPage />
+          </EncoderRoute>
+        }
+      />
+      <Route
+        path="/encoder/songs/new"
+        element={
+          <EncoderRoute>
+            <TemplateEditorPage />
+          </EncoderRoute>
+        }
+      />
+      <Route
+        path="/encoder/songs/:id"
+        element={
+          <EncoderRoute>
+            <TemplateEditorPage />
+          </EncoderRoute>
         }
       />
 
@@ -71,6 +100,16 @@ export function AppRoutes() {
         element={
           <ProtectedRoute requireRole="admin">
             <SongEditorPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* Ahead of /songs/:id for readability — React Router already ranks the
+          static segment above the dynamic one. */}
+      <Route
+        path="/songs/library"
+        element={
+          <ProtectedRoute requireRole="admin">
+            <SongLibraryPage />
           </ProtectedRoute>
         }
       />

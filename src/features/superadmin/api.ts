@@ -6,7 +6,11 @@ export interface PlatformStats {
   total_churches: number;
   total_songs: number;
   total_worship_sets: number;
+  total_library_songs: number;
 }
+
+/** The only transitions superadmin_set_role accepts. */
+export type AssignableRole = "presenter" | "encoder";
 
 export interface PlatformAccount {
   id: string;
@@ -40,6 +44,22 @@ export async function fetchPlatformAccounts(): Promise<PlatformAccount[]> {
 export async function deletePlatformAccount(targetId: string): Promise<void> {
   const { error } = await supabase.rpc("superadmin_delete_user", {
     target_id: targetId,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Only presenter <-> encoder. `admin` is earned by creating a church, and
+ * `superadmin` stays SQL-only — the function rejects anything else, along with
+ * any account that already belongs to a church.
+ */
+export async function setAccountRole(
+  targetId: string,
+  role: AssignableRole,
+): Promise<void> {
+  const { error } = await supabase.rpc("superadmin_set_role", {
+    target_id: targetId,
+    new_role: role,
   });
   if (error) throw error;
 }

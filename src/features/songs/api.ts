@@ -1,5 +1,13 @@
 import { supabase } from "@/lib/supabase/client";
-import type { Song, SongSection, SongWithSections } from "@/types/database";
+import { saveSections, type SectionFormValues } from "@/lib/save-sections";
+import type {
+  HymnTemplateSection,
+  Song,
+  SongSection,
+  SongWithSections,
+} from "@/types/database";
+
+export type { SectionFormValues };
 
 export interface SongFormValues {
   title: string;
@@ -11,12 +19,12 @@ export interface SongFormValues {
   description: string;
 }
 
-export interface SectionFormValues {
-  id?: string;
-  type: SongSection["type"];
-  title: string;
-  lyrics: string;
-  order_index: number;
+/** Raised when a library song is already in the church's hymnal. */
+export class AlreadyInHymnalError extends Error {
+  constructor() {
+    super("That song is already in your hymnal.");
+    this.name = "AlreadyInHymnalError";
+  }
 }
 
 export async function fetchSongWithSections(songId: string): Promise<SongWithSections> {
@@ -37,7 +45,10 @@ export async function fetchSongWithSections(songId: string): Promise<SongWithSec
   return { ...(song as Song), sections: (sections ?? []) as SongSection[] };
 }
 
-export async function createSong(values: SongFormValues): Promise<Song> {
+export async function createSong(
+  values: SongFormValues,
+  sourceTemplateId?: string,
+): Promise<Song> {
   const { data, error } = await supabase
     .from("songs")
     .insert({
@@ -48,6 +59,7 @@ export async function createSong(values: SongFormValues): Promise<Song> {
       key: values.key || null,
       tempo: values.tempo || null,
       description: values.description || null,
+      source_template_id: sourceTemplateId ?? null,
     })
     .select()
     .single();
@@ -89,66 +101,97 @@ export async function saveSongSections(
   sections: SectionFormValues[],
   existingIds: string[],
 ): Promise<SongSection[]> {
-  const keepIds = sections.filter((s) => s.id).map((s) => s.id!) as string[];
-  const toDelete = existingIds.filter((id) => !keepIds.includes(id));
+  return saveSections<SongSection>({
+    table: "song_sections",
+    parentColumn: "song_id",
+    parentId: songId,
+    sections,
+    existingIds,
+  });
+}
 
-  if (toDelete.length > 0) {
-    const { error } = await supabase.from("song_sections").delete().in("id", toDelete);
-    if (error) throw error;
+/**
+ * The template ids this church has already copied in, so the library page can
+ * show an "Added" state. One query rather than one per card.
+ */
+export async function fetchAddedTemplateIds(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("songs")
+    .select("source_template_id")
+    .not("source_template_id", "is", null);
+  if (error) throw error;
+  return new Set(
+    (data ?? [])
+      .map((row) => (row as { source_template_id: string | null }).source_template_id)
+      .filter((id): id is string => !!id),
+  );
+}
+
+/**
+ * Copies a library song into the caller's church. The copy is theirs from that
+ * moment on — later encoder edits to the template never reach it.
+ *
+ * No RPC needed: an admin already has INSERT on songs/song_sections under RLS,
+ * and church_id is filled by the existing trigger.
+ */
+export async function addLibrarySongToChurch(templateId: string): Promise<Song> {
+  const { data: template, error: templateError } = await supabase
+    .from("hymn_templates")
+    .select("*")
+    .eq("id", templateId)
+    .single();
+  if (templateError) throw templateError;
+
+  const { data: sections, error: sectionsError } = await supabase
+    .from("hymn_template_sections")
+    .select("*")
+    .eq("template_id", templateId)
+    .order("order_index", { ascending: true });
+  if (sectionsError) throw sectionsError;
+
+  const t = template as {
+    title: string;
+    author: string | null;
+    composer: string | null;
+    category: string | null;
+    key: string | null;
+    tempo: string | null;
+    description: string | null;
+  };
+
+  let song: Song;
+  try {
+    song = await createSong(
+      {
+        title: t.title,
+        author: t.author ?? "",
+        composer: t.composer ?? "",
+        category: t.category ?? "",
+        key: t.key ?? "",
+        tempo: t.tempo ?? "",
+        description: t.description ?? "",
+      },
+      templateId,
+    );
+  } catch (err) {
+    // idx_songs_church_template — two tabs, or a stale "Add" button.
+    if ((err as { code?: string })?.code === "23505") throw new AlreadyInHymnalError();
+    throw err;
   }
 
-  // New sections go in one round trip. Pasting a whole song creates a dozen or
-  // more at once, and a row-at-a-time loop meant a dozen sequential requests
-  // that could fail halfway and leave the song half-saved.
-  //
-  // church_id is deliberately not sent: a database trigger fills it, and the
-  // client's permission to write it was revoked in 0010.
-  const newSections = sections.filter((s) => !s.id);
-  const insertedById = new Map<number, SongSection>();
-
-  if (newSections.length > 0) {
-    const { data, error } = await supabase
-      .from("song_sections")
-      .insert(
-        newSections.map((section) => ({
-          song_id: songId,
-          type: section.type,
-          title: section.title,
-          lyrics: section.lyrics,
-          order_index: section.order_index,
-        })),
-      )
-      .select();
-    if (error) throw error;
-    for (const row of (data ?? []) as SongSection[]) {
-      insertedById.set(row.order_index, row);
-    }
+  const rows = (sections ?? []) as HymnTemplateSection[];
+  if (rows.length > 0) {
+    await saveSongSections(
+      song.id,
+      rows.map((s, i) => ({
+        type: s.type,
+        title: s.title,
+        lyrics: s.lyrics,
+        order_index: i,
+      })),
+      [],
+    );
   }
 
-  // Existing rows are updated individually: an ordinary edit touches only a
-  // few, and PostgREST has no batch-update-by-id.
-  const results: SongSection[] = [];
-  for (const section of sections) {
-    if (!section.id) {
-      const inserted = insertedById.get(section.order_index);
-      if (inserted) results.push(inserted);
-      continue;
-    }
-
-    const { data, error } = await supabase
-      .from("song_sections")
-      .update({
-        type: section.type,
-        title: section.title,
-        lyrics: section.lyrics,
-        order_index: section.order_index,
-      })
-      .eq("id", section.id)
-      .select()
-      .single();
-    if (error) throw error;
-    results.push(data as SongSection);
-  }
-
-  return results;
+  return song;
 }

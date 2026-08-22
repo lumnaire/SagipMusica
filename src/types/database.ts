@@ -1,4 +1,14 @@
-export type UserRole = "admin" | "presenter" | "superadmin";
+export type UserRole = "admin" | "presenter" | "superadmin" | "encoder";
+
+/** Draft templates are visible only to encoders; publishing exposes them to admins. */
+export type TemplateStatus = "draft" | "published";
+
+/**
+ * Whether the lyrics on a template are safe to reproduce. `metadata_only` means
+ * the song is deliberately shipped without words because it is still under
+ * copyright — the church adds them under its own CCLI licence.
+ */
+export type CopyrightStatus = "public_domain" | "licensed" | "metadata_only";
 
 export type SectionType =
   | "verse"
@@ -48,6 +58,8 @@ export interface Song {
   key: string | null;
   tempo: string | null;
   description: string | null;
+  /** Set when the song was copied in from the shared library; null if hand-written. */
+  source_template_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,10 +94,46 @@ export interface WorshipSetItem {
   created_at: string;
 }
 
+/**
+ * A song in the shared library, maintained by an encoder. Unlike a Song it has
+ * no church_id — it belongs to the platform, and an admin adding it to their
+ * hymnal gets a copy they own outright.
+ */
+export interface HymnTemplate {
+  id: string;
+  title: string;
+  author: string | null;
+  composer: string | null;
+  category: string | null;
+  key: string | null;
+  tempo: string | null;
+  description: string | null;
+  status: TemplateStatus;
+  is_starter: boolean;
+  copyright_status: CopyrightStatus;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface HymnTemplateSection {
+  id: string;
+  template_id: string;
+  type: SectionType;
+  title: string;
+  lyrics: string;
+  order_index: number;
+}
+
 // Composite / hydrated types used across the UI
 
 export interface SongWithSections extends Song {
   sections: SongSection[];
+}
+
+export interface HymnTemplateWithSections extends HymnTemplate {
+  sections: HymnTemplateSection[];
 }
 
 export interface WorshipSetItemWithSong extends WorshipSetItem {
@@ -113,6 +161,12 @@ export const REFERRAL_SOURCE_LABELS: Record<ReferralSource, string> = {
   instagram: "Instagram",
   friend: "A friend recommended it",
   other: "Other",
+};
+
+export const COPYRIGHT_STATUS_LABELS: Record<CopyrightStatus, string> = {
+  public_domain: "Public domain",
+  licensed: "Licensed — churches need CCLI cover",
+  metadata_only: "No lyrics — still under copyright",
 };
 
 export const SONG_CATEGORIES = [

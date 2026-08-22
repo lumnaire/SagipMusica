@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
 import type { UserRole } from "@/types/database";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
+import { isPlatformRole, landingPathFor } from "@/lib/auth-routing";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -23,11 +24,11 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { status, profile } = useAuthStore();
   const location = useLocation();
-  // A superadmin sits outside the tenant model and has no church, so every
-  // route this guard wraps is a church route they don't belong on.
-  const isSuperadmin = status === "authenticated" && profile?.role === "superadmin";
+  // Superadmins and encoders sit outside the tenant model and have no church,
+  // so every route this guard wraps is a church route they don't belong on.
+  const isPlatform = status === "authenticated" && isPlatformRole(profile);
   const needsOnboarding =
-    status === "authenticated" && requireChurch && !isSuperadmin && !profile?.church_id;
+    status === "authenticated" && requireChurch && !isPlatform && !profile?.church_id;
   const isUnauthorized =
     status === "authenticated" &&
     !needsOnboarding &&
@@ -49,10 +50,10 @@ export function ProtectedRoute({
   }
 
   // Send them home rather than merely letting them through: OAuth and email
-  // verification both land on /dashboard via `redirectTo`, so a superadmin
+  // verification both land on /dashboard via `redirectTo`, so a platform role
   // would otherwise sit on a church dashboard with no church behind it.
-  if (isSuperadmin) {
-    return <Navigate to="/superadmin" replace />;
+  if (isPlatform) {
+    return <Navigate to={landingPathFor(profile)} replace />;
   }
 
   if (needsOnboarding) {

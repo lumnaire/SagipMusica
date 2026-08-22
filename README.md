@@ -142,8 +142,10 @@ src/
     onboarding/         church creation + spotlight tour trigger
     marketing/           landing page, nav, footer
     dashboard/          dashboard + settings pages
-    songs/              song list, preview, data access
+    songs/              song list, preview, shared library, data access
     song-editor/        song CRUD form, section list, drag-and-drop
+    encoder/            shared song library editor (platform role)
+    superadmin/         platform stats, account + role management
     worship-sets/       worship set CRUD, song picker, reordering
     presentation/        engine (BroadcastChannel, slide loader), presenter
                           controls, projector view, the 16:9 slide canvas
@@ -157,11 +159,25 @@ supabase/
 
 ## Roles
 
+Church roles — these belong to one church and see only that church's data:
+
 - **admin** — everything, including creating/editing/deleting songs, and
   updating church branding. The user who completes onboarding for a church
   becomes its admin.
 - **presenter** — can view the hymnal, build and run worship sets, and
   control live presentations, but cannot edit the hymnal itself
+
+Platform roles — these have no `church_id` and sit outside the tenant model, so
+they can never read or write any church's songs:
+
+- **superadmin** — sees platform-wide counts and every account, can delete
+  accounts, and can promote a church-less account to encoder. Granted by SQL
+  only (see `0011_superadmin.sql`).
+- **encoder** — maintains the shared song library at `/encoder`: adds songs,
+  keeps them as drafts, and publishes them. Church admins browse the published
+  catalog at `/songs/library` and copy songs into their own hymnal, where the
+  copy becomes theirs to edit — later library edits never touch it. Granted by
+  a superadmin from `/superadmin` (see `0012_song_encoder.sql`).
 
 ## What's intentionally not built yet
 
