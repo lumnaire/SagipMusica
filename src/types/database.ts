@@ -169,12 +169,48 @@ export const COPYRIGHT_STATUS_LABELS: Record<CopyrightStatus, string> = {
   metadata_only: "No lyrics — still under copyright",
 };
 
+/**
+ * Alphabetical, with the two catch-alls pinned to the end. The list grew from
+ * seven to thirty-three when the FBC hymnal was imported (0013): its taxonomy
+ * is far more useful for finding a song than "Hymn" was, so it was adopted
+ * rather than flattened. Three of its names duplicated ours and were folded in
+ * on import — "Praise and Worship", "Hymns" and "Gospel Songs".
+ *
+ * songs.category is plain text with no CHECK constraint, so this list drives
+ * the pickers only; it is not a database enum.
+ */
 export const SONG_CATEGORIES = [
-  "Hymn",
-  "Praise & Worship",
-  "Gospel",
+  "Adoration and Majesty of God",
+  "Advent",
+  "Assurance",
+  "Children's Hymns",
+  "Christian Life and Discipleship",
   "Christmas",
-  "Easter",
+  "Comfort and Hope",
   "Communion",
+  "Consecration and Service",
+  "Cross and Blood",
+  "Death and Resurrection",
+  "Easter",
+  "Faith and Trust",
+  "Funeral and Comfort in Sorrow",
+  "Gospel",
+  "Grace and Mercy",
+  "Guidance and Providence",
+  "Heaven and Eternity",
+  "Holy Spirit",
+  "Hymn",
+  "Invitation",
+  "Jesus Christ",
+  "Love and Devotion",
+  "Missions and Evangelism",
+  "Praise & Worship",
+  "Prayer",
+  "Salvation",
+  "Second Coming",
+  "Thanksgiving",
+  "The Church and Fellowship",
+  "Warning",
+  "Word of God",
   "Other",
 ] as const;

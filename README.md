@@ -155,7 +155,28 @@ src/
 supabase/
   migrations/           SQL schema + RLS + storage policies
   seed.sql              notes on why there's no global seed data anymore
+scripts/
+  generate-hymnal-migration.mjs   regenerates 0013 from the FBC hymnal JSON
+docs/
+  hymnal-copyright-review.md      which imported hymns ship without lyrics, and why
 ```
+
+## The shared song library
+
+`hymn_templates` is a platform-wide catalog, separate from any church's `songs`.
+An encoder maintains it; admins copy songs out of it at `/songs/library`, and the
+copy is theirs from that moment on.
+
+It holds two things: the original 20 starter hymns (`is_starter = true`, given to
+every new church automatically at signup), and the 399-hymn FBC hymnal imported by
+`0013_fbc_hymnal.sql`, which is browse-only so a new church doesn't open a hymnal
+with 419 songs in it.
+
+`0013` is **generated** — edit `scripts/generate-hymnal-migration.mjs` and re-run it
+rather than hand-editing the SQL. 21 hymns whose words are still under copyright are
+imported as metadata only, with no lyrics; see
+[docs/hymnal-copyright-review.md](docs/hymnal-copyright-review.md), which also lists
+the titles that still need a human check.
 
 ## Roles
 

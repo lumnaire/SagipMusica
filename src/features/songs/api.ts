@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { saveSections, type SectionFormValues } from "@/lib/save-sections";
 import type {
+  HymnTemplate,
   HymnTemplateSection,
   Song,
   SongSection,
@@ -149,15 +150,7 @@ export async function addLibrarySongToChurch(templateId: string): Promise<Song> 
     .order("order_index", { ascending: true });
   if (sectionsError) throw sectionsError;
 
-  const t = template as {
-    title: string;
-    author: string | null;
-    composer: string | null;
-    category: string | null;
-    key: string | null;
-    tempo: string | null;
-    description: string | null;
-  };
+  const t = template as HymnTemplate;
 
   let song: Song;
   try {

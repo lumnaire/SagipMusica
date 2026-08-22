@@ -34,7 +34,10 @@ function template(id: string, title: string) {
 vi.mock("@/lib/supabase/client", () => ({
   supabase: createSupabaseMock({
     hymn_templates: {
-      data: [template("tpl-1", "Amazing Grace"), template("tpl-2", "Blessed Assurance")],
+      data: [
+        template("tpl-1", "Amazing Grace"),
+        template("tpl-2", "Blessed Assurance"),
+      ],
       error: null,
     },
     // The church already copied tpl-2 in.
