@@ -5,7 +5,7 @@ import {
   XIcon,
 } from "@/components/icons/social-icons";
 import { useConsentStore } from "@/stores/consent-store";
-import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 const SOCIALS = [
   {
@@ -21,25 +21,37 @@ const SOCIALS = [
   },
 ];
 
+/** Shared by every footer link, so the three columns stay in step. */
+const LINK_CLASS =
+  "text-muted-foreground transition-colors hover:text-foreground";
+
 export function MarketingFooter() {
   const openCustomize = useConsentStore((s) => s.openCustomize);
 
   return (
-    <footer className="border-t border-border bg-background py-14">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
-          <div className="max-w-xs">
+    <footer className="border-t border-border bg-background py-10 sm:py-14">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
+        <div className="flex flex-col gap-9 md:flex-row md:justify-between md:gap-8 lg:gap-10">
+          <div className="md:max-w-[14rem] lg:max-w-xs">
             <Link to="/" className="flex items-center gap-2.5">
-              <img src={sagipmusicaLogo} alt="" className="h-7 w-7 object-contain" />
-              <span className="font-display text-lg text-foreground">SagipMusica</span>
+              <img
+                src={sagipmusicaLogo}
+                alt=""
+                className="h-6 w-6 shrink-0 object-contain sm:h-7 sm:w-7"
+              />
+              <span className="font-display text-base text-foreground sm:text-lg">
+                SagipMusica
+              </span>
             </Link>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">
               A hymnal, a service order, and a projector — in one place for
               your church.
             </p>
 
             <div className="mt-5">
-              <p className="text-xs text-muted-foreground">Follow our socials</p>
+              <p className="text-[0.6875rem] text-muted-foreground sm:text-xs">
+                Follow our socials
+              </p>
               <ul className="mt-2.5 flex items-center gap-2">
                 {SOCIALS.map(({ name, href, Icon }) => (
                   <li key={name}>
@@ -58,17 +70,23 @@ export function MarketingFooter() {
             </div>
           </div>
 
-          <nav className="flex gap-16" aria-label="Footer">
+          {/* Three columns beside the blurb only fit from `md`. Below that the
+              labels wrap a word per line — so a phone gets two columns under
+              the blurb, a tablet gets three, and the row waits for the room. */}
+          <nav
+            className="grid grid-cols-2 gap-x-6 gap-y-8 xs:gap-x-10 sm:grid-cols-3 sm:gap-x-8 md:flex md:gap-8 lg:gap-14"
+            aria-label="Footer"
+          >
             <div>
-              <h2 className="eyebrow">Product</h2>
-              <ul className="mt-4 space-y-2.5 text-sm">
+              <h2 className="eyebrow text-[0.6875rem] sm:text-xs">Product</h2>
+              <ul className="mt-3.5 space-y-2.5 text-xs sm:mt-4 sm:text-sm">
                 <li>
-                  <Link to="/signup" className="text-muted-foreground hover:text-foreground">
+                  <Link to="/signup" className={LINK_CLASS}>
                     Create an account
                   </Link>
                 </li>
                 <li>
-                  <Link to="/login" className="text-muted-foreground hover:text-foreground">
+                  <Link to="/login" className={LINK_CLASS}>
                     Sign in
                   </Link>
                 </li>
@@ -76,20 +94,20 @@ export function MarketingFooter() {
             </div>
 
             <div>
-              <h2 className="eyebrow">Legal</h2>
-              <ul className="mt-4 space-y-2.5 text-sm">
+              <h2 className="eyebrow text-[0.6875rem] sm:text-xs">Legal</h2>
+              <ul className="mt-3.5 space-y-2.5 text-xs sm:mt-4 sm:text-sm">
                 <li>
-                  <Link to="/terms" className="text-muted-foreground hover:text-foreground">
+                  <Link to="/terms" className={LINK_CLASS}>
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy" className="text-muted-foreground hover:text-foreground">
+                  <Link to="/privacy" className={LINK_CLASS}>
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/cookies" className="text-muted-foreground hover:text-foreground">
+                  <Link to="/cookies" className={LINK_CLASS}>
                     Cookie Policy
                   </Link>
                 </li>
@@ -97,7 +115,7 @@ export function MarketingFooter() {
                   <button
                     type="button"
                     onClick={openCustomize}
-                    className="text-muted-foreground hover:text-foreground"
+                    className={`text-left ${LINK_CLASS}`}
                   >
                     Cookie settings
                   </button>
@@ -105,22 +123,22 @@ export function MarketingFooter() {
               </ul>
             </div>
 
-            <div>
-              <h2 className="eyebrow">Contact</h2>
-              <ul className="mt-4 space-y-2.5 text-sm">
+            {/* Odd one out of the phone's two-column grid, so it takes its own
+                full-width row rather than sitting in a half-empty one. From
+                `sm` there are three columns and it sits in the third. */}
+            <div className="col-span-2 sm:col-span-1">
+              <h2 className="eyebrow text-[0.6875rem] sm:text-xs">Contact</h2>
+              <ul className="mt-3.5 space-y-2.5 text-xs sm:mt-4 sm:text-sm">
                 <li>
                   <a
                     href="mailto:connect@lumnaire.com"
-                    className="break-all text-muted-foreground hover:text-foreground"
+                    className={`break-all ${LINK_CLASS}`}
                   >
                     connect@lumnaire.com
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="tel:+639489664935"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+                  <a href="tel:+639489664935" className={LINK_CLASS}>
                     +63 948 966 4935
                   </a>
                 </li>
@@ -129,9 +147,9 @@ export function MarketingFooter() {
           </nav>
         </div>
 
-        <div className="staff-rule mt-12 opacity-50" aria-hidden="true" />
+        <div className="staff-rule mt-10 opacity-50 sm:mt-12" aria-hidden="true" />
 
-        <p className="mt-6 text-xs text-muted-foreground">
+        <p className="mt-5 text-[0.6875rem] text-muted-foreground sm:mt-6 sm:text-xs">
           &copy; {new Date().getFullYear()} SagipMusica. Built by Lumnaire.
         </p>
       </div>

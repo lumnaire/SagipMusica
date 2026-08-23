@@ -17,7 +17,7 @@ import {
 import { GradientBackdrop } from "@/components/ui/gradient-backdrop";
 import { REFERRAL_SOURCE_LABELS, type ReferralSource } from "@/types/database";
 import { cn } from "@/lib/utils";
-import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 const REFERRAL_OPTIONS = Object.entries(REFERRAL_SOURCE_LABELS) as [ReferralSource, string][];
 

@@ -18,7 +18,7 @@ import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
-import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 interface NavLocation {
   pathname: string;

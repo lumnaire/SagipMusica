@@ -49,7 +49,7 @@ import {
   type PlatformAccount,
   type PlatformStats,
 } from "@/features/superadmin/api";
-import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 export function SuperAdminPage() {
   const { profile, signOut } = useAuthStore();

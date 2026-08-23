@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 /**
  * @param solid Forces the filled bar. Pages without a dark hero behind the

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import sagipmusicaLogo from "@/assets/sagipmusica-logo.png";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 import lumnaireLogo from "@/assets/lumnaire_logo.png";
 import show1 from "@/assets/show1.jpg";
 import show2 from "@/assets/show2.jpg";
