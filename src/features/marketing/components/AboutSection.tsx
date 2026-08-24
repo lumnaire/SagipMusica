@@ -32,11 +32,11 @@ export function AboutSection() {
 
         <Reveal delay={0.15}>
           <div className="mt-10 flex justify-center">
-            <div className="flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2.5 shadow-sm">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2.5 shadow-sm sm:rounded-full">
               <img src={lumnaireLogo} alt="" className="h-6 w-6 rounded-sm" />
               <p className="text-sm text-muted-foreground">
-                Built by <span className="font-medium text-foreground">Ronald Castromero</span>,
-                founder of Lumnaire
+                Built by <span className="font-medium text-foreground">Ronald Castromero</span>{" "}
+                from Fundamental Baptist Church, founder of Lumnaire
               </p>
             </div>
           </div>

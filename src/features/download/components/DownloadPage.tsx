@@ -19,12 +19,13 @@ import { WindowsIcon, AppleIcon } from "@/components/icons/platform-icons";
 import { MarketingNav } from "@/features/marketing/components/MarketingNav";
 import { MarketingFooter } from "@/features/marketing/components/MarketingFooter";
 import { SupportDialog } from "@/features/marketing/components/SupportDialog";
+import { DownloadDialog } from "./DownloadDialog";
 import {
   DESKTOP_RELEASED,
   DESKTOP_SIZE,
   DESKTOP_VERSION,
-  DOWNLOAD_URL,
   FACEBOOK_URL,
+  INSTALL_STEPS,
   LIBRARY_CATEGORY_COUNT,
   LIBRARY_SONG_COUNT,
   STARTER_SONG_COUNT,
@@ -60,21 +61,6 @@ const FEATURES = [
     icon: ShieldCheck,
     title: "Nothing leaves the computer",
     body: "There is no account and no sign-in. Your church's songs are yours, sitting in a file you can copy, and we never see them.",
-  },
-];
-
-const STEPS = [
-  {
-    title: "Download and run the installer",
-    body: "The file is SagipMusica-Setup.exe. It installs for your user only, so Windows will not ask for an administrator password.",
-  },
-  {
-    title: "Click through the blue warning",
-    body: "Windows will say \"Windows protected your PC\" because this build is not code-signed yet — a certificate is on the list. Choose More info, then Run anyway.",
-  },
-  {
-    title: "Open it and start browsing",
-    body: `SagipMusica sets itself up on first launch and lands on a dashboard with ${STARTER_SONG_COUNT} hymns already in place. The rest of the library is under Songs → Library.`,
   },
 ];
 
@@ -137,19 +123,19 @@ export function DownloadPage() {
 
           <Reveal delay={0.12}>
             <div className="mt-10 flex flex-col items-center gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="h-14 w-full max-w-sm gap-2.5 rounded-xl text-base shadow-lg shadow-black/25 sm:w-auto sm:px-9"
-              >
-                {/* A plain link, not a fetch: the browser's own download
-                    manager handles a 108 MB file far better than we could,
-                    and it survives a dropped connection. */}
-                <a href={DOWNLOAD_URL}>
+              {/* The button opens the survey; the dialog is what actually
+                  starts the file. Still a plain link underneath, not a fetch:
+                  the browser's own download manager handles a 108 MB file far
+                  better than we could, and it survives a dropped connection. */}
+              <DownloadDialog>
+                <Button
+                  size="lg"
+                  className="h-14 w-full max-w-sm gap-2.5 rounded-xl text-base shadow-lg shadow-black/25 sm:w-auto sm:px-9"
+                >
                   <Download className="h-5 w-5" />
                   Download for Windows
-                </a>
-              </Button>
+                </Button>
+              </DownloadDialog>
 
               <p className="text-sm text-white/55">
                 Version {DESKTOP_VERSION} · {DESKTOP_SIZE} · Windows 10 &amp; 11
@@ -254,7 +240,7 @@ export function DownloadPage() {
             </Reveal>
 
             <ol className="mt-10 space-y-9">
-              {STEPS.map((step, i) => (
+              {INSTALL_STEPS.map((step, i) => (
                 <Reveal key={step.title} delay={i * 0.08}>
                   <li className="relative border-t border-border pt-6">
                     <span
@@ -296,12 +282,12 @@ export function DownloadPage() {
 
               <div className="staff-rule my-7 opacity-50" aria-hidden="true" />
 
-              <Button asChild className="w-full gap-2">
-                <a href={DOWNLOAD_URL}>
+              <DownloadDialog>
+                <Button className="w-full gap-2">
                   <Download className="h-4 w-4" />
                   Download {DESKTOP_SIZE}
-                </a>
-              </Button>
+                </Button>
+              </DownloadDialog>
 
               <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
                 Released {DESKTOP_RELEASED}.

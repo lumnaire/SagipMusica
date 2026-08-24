@@ -38,3 +38,26 @@ export const FACEBOOK_URL = "https://www.facebook.com/lumnaireph";
 export const LIBRARY_SONG_COUNT = "400+";
 export const LIBRARY_CATEGORY_COUNT = 33;
 export const STARTER_SONG_COUNT = 20;
+
+/**
+ * What a first-time installer has to do, in order.
+ *
+ * Lives here rather than in the page because the download dialog walks people
+ * through the same three steps the moment the file starts, and the two must
+ * never drift apart -- the SmartScreen warning in step two is the whole reason
+ * the dialog exists.
+ */
+export const INSTALL_STEPS = [
+  {
+    title: "Download and run the installer",
+    body: "The file is SagipMusica-Setup.exe. It installs for your user only, so Windows will not ask for an administrator password.",
+  },
+  {
+    title: "Click through the blue warning",
+    body: "Windows will say \"Windows protected your PC\" because this build is not code-signed yet — a certificate is on the list. Choose More info, then Run anyway.",
+  },
+  {
+    title: "Open it and start browsing",
+    body: `SagipMusica sets itself up on first launch and lands on a dashboard with ${STARTER_SONG_COUNT} hymns already in place. The rest of the library is under Songs → Library.`,
+  },
+];

@@ -142,6 +142,7 @@ src/
     onboarding/         church creation + spotlight tour trigger
     marketing/           landing page, nav, footer
     dashboard/          dashboard + settings pages
+    download/           desktop download page + the pre-download survey
     songs/              song list, preview, shared library, data access
     song-editor/        song CRUD form, section list, drag-and-drop
     encoder/            shared song library editor (platform role)
