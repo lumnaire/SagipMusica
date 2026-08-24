@@ -121,7 +121,12 @@ create policy "download_signups_select_superadmin" on download_signups
 -- and the check inside is the real gate.
 -- ============================================================================
 
-create or replace function superadmin_download_signups()
+-- Dropped rather than replaced: `create or replace` cannot change a function's
+-- OUT parameters, so once this has been run and the returned columns change,
+-- every later run fails with 42P13 until the old one is gone.
+drop function if exists superadmin_download_signups();
+
+create function superadmin_download_signups()
 returns table (
   signup_type text,
   church_name text,
