@@ -7,10 +7,14 @@ import { seedIfEmpty } from "./db/seed";
 import { registerIpc } from "./ipc";
 import { registerPresentationRelay } from "./presentation-relay";
 import { handleAppScheme, registerAppScheme, rendererDir } from "./protocol";
+import { createSplash } from "./splash";
 import { createMainWindow } from "./windows";
 
 // Must happen before the app is ready.
 registerAppScheme();
+
+/** Held only so the second-instance handler can tell it apart. */
+let splashWindow: BrowserWindow | null = null;
 
 /** The hymn library that ships inside the installer. */
 function seedPath(): string {
@@ -25,7 +29,11 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    const [existing] = BrowserWindow.getAllWindows();
+    // The splash is skipped: during the first second of a launch it is the
+    // only window there is, and focusing it would do nothing useful.
+    const existing = BrowserWindow.getAllWindows().find(
+      (w) => w !== splashWindow && !w.isDestroyed(),
+    );
     if (existing) {
       if (existing.isMinimized()) existing.restore();
       existing.focus();
@@ -35,6 +43,24 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     electronApp.setAppUserModelId("com.lumnaire.sagipmusica");
 
+    // In dev, electron-vite serves the renderer over http and sets this.
+    const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
+    // Before the splash, not after: in the packaged build the splash page is
+    // served over app://, and this is what serves it.
+    if (!devServerUrl) handleAppScheme(rendererDir());
+
+    app.on("browser-window-created", (_event, window) => {
+      optimizer.watchWindowShortcuts(window);
+    });
+
+    // Created before the database work, which on a first run seeds four and a
+    // half thousand rows. That work is synchronous and blocks this process --
+    // including the protocol handler that serves the splash -- so creating the
+    // window first is what gets it painting the moment the seed lets go,
+    // rather than a second later alongside the main window.
+    const splash = createSplash(devServerUrl);
+    splashWindow = splash.window;
+
     const db = openDb();
     migrate(db);
     seedIfEmpty(db, seedPath());
@@ -42,15 +68,13 @@ if (!app.requestSingleInstanceLock()) {
     registerIpc();
     registerPresentationRelay();
 
-    // In dev, electron-vite serves the renderer over http and sets this.
-    const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
-    if (!devServerUrl) handleAppScheme(rendererDir());
-
-    app.on("browser-window-created", (_event, window) => {
-      optimizer.watchWindowShortcuts(window);
-    });
-
-    createMainWindow(devServerUrl);
+    // The main window shows itself underneath as soon as its renderer is
+    // ready; the splash then fades away to reveal it.
+    const mainWindow = createMainWindow(devServerUrl);
+    mainWindow.once("ready-to-show", () => splash.dismiss());
+    // A window that closes before it ever painted would otherwise leave the
+    // splash up until its safety timer fires.
+    mainWindow.once("closed", () => splash.dismiss());
 
     // macOS keeps the app alive with no windows; reopen on dock click.
     app.on("activate", () => {

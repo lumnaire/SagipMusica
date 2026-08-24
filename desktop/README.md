@@ -26,9 +26,13 @@ redirect the handful of modules that talk to Supabase to files under
 | `@/stores/auth-store` | `renderer/data/auth-store.ts` |
 | `@/stores/church-store` | `renderer/data/church-store.ts` |
 | `@/components/layout/AppShell` | `renderer/components/AppShell.tsx` |
+| `@/lib/build-target` | `renderer/build-target.ts` |
 
-AppShell is the only alias that is not a data module. The frame genuinely
-differs: there is no account to sign out of and no role to display.
+Two aliases are not data modules. AppShell, because the frame genuinely
+differs: there is no account to sign out of and no role to display. And
+`build-target`, which is how a shared page asks which build it is running
+inside — it is what removes the "Browse library" button from the songs page
+here (see below).
 
 The practical consequence is that **a change to a page in `../src` reaches the
 desktop app for free**, and a change to any module in that table has to be
@@ -37,7 +41,9 @@ component code, so a signature that drifts is a compile error rather than a
 runtime surprise.
 
 Excluded entirely: auth, onboarding, marketing, legal, encoder and superadmin.
-None of them means anything without a server.
+None of them means anything without a server. Since 1.0.1 the shared song
+library at `/songs/library` is excluded too, for a different reason — see
+"The hymnal" below.
 
 ## Architecture
 
@@ -76,11 +82,52 @@ Migrations are ordered steps driven by SQLite's `user_version` pragma in
 installs in the field will diverge from fresh ones.
 
 On first run the app seeds itself from `resources/hymnal-seed.json`: one church
-row, the full 419-song library as read-only templates, and the 20 starter hymns
-copied into the church's own hymnal — mirroring what signup does in the hosted
-app, so a fresh install opens on a stocked dashboard rather than an empty one.
+row, the full 419-song library as read-only templates, and **every published
+one of them copied into the church's own hymnal**.
 
 Regenerate the seed from the migrations with `npm run seed`.
+
+## The hymnal
+
+This is the one place the desktop deliberately behaves differently from the
+hosted app, rather than just fetching differently.
+
+On the web, signup copies the 20 `is_starter` hymns and the other 399 are
+browsed and added one at a time from `/songs/library`. That page earns its
+place there: the library is platform-owned, an encoder keeps adding to it, and
+a church on a shared platform should not wake up to 419 songs it never asked
+for.
+
+None of that is true here. The whole library is already inside the installer,
+there is no encoder and no one else to affect, and nothing is downloaded — so
+browsing a catalog to copy songs out of it costs the user a step and buys them
+nothing. The first launch copies all of it into the hymnal, and **the library
+page does not exist in this build**: `/songs/library` redirects to `/songs`,
+and `HAS_SHARED_LIBRARY` (see the alias table) drops the "Browse library"
+button, so the page is tree-shaken out of the bundle entirely.
+
+23 of those hymns are `metadata_only` — still under copyright, shipped with no
+stanzas (see [docs/hymnal-copyright-review.md](../docs/hymnal-copyright-review.md)).
+They are copied in too, arriving as a title, author and key for the church to
+type its own licensed copy into, rather than the hymn disappearing from the app.
+
+**Installs already in the field** are handled by migration step 2
+(`adoptLibraryIntoHymnal` in `src/main/db/migrate.ts`), which copies every
+published template that is not in the hymnal yet. Without it, upgrading from
+1.0.0 would strand 399 hymns behind a page that no longer exists.
+
+## The splash screen
+
+`src/renderer/splash.html` is a second page in the renderer build — no script,
+pure CSS, so it paints as soon as it is parsed. `src/main/splash.ts` shows it
+frameless, transparent and always on top, **before** opening the database:
+seeding four and a half thousand rows on a first run is synchronous and blocks
+the main process, including the protocol handler that serves this page.
+
+The main window is created straight after and shows itself underneath as soon
+as its renderer is ready. The splash then fades out (driven from main with
+`setOpacity`, not from CSS) to reveal it, with a floor on how briefly it can
+appear so a warm start reads as a screen rather than a flicker.
 
 ## Backups
 

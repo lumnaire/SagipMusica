@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardPage } from "@/features/dashboard/components/DashboardPage";
 import { SongsListPage } from "@/features/songs/components/SongsListPage";
-import { SongLibraryPage } from "@/features/songs/components/SongLibraryPage";
 import { SongPreviewPage } from "@/features/songs/components/SongPreviewPage";
 import { SongEditorPage } from "@/features/song-editor/components/SongEditorPage";
 import { WorshipSetsListPage } from "@/features/worship-sets/components/WorshipSetsListPage";
@@ -18,6 +17,11 @@ import { SettingsPage } from "./pages/SettingsPage";
  * encoder or superadmin areas — and no ProtectedRoute wrappers, because there
  * is no session to protect. The database is a file this user already owns.
  *
+ * /songs/library is gone too, for a different reason: it is not that it cannot
+ * work offline, it is that it has nothing left to offer. The installer carries
+ * the whole library and the first launch copies all of it into the hymnal, so
+ * the catalog and the hymnal hold the same songs (see main/db/seed.ts).
+ *
  * Paths are kept identical to the web build so every navigate() and <Link> in
  * the reused pages still lands where it means to.
  */
@@ -31,8 +35,11 @@ export function AppRoutes() {
       <Route path="/songs" element={<SongsListPage />} />
       <Route path="/songs/new" element={<SongEditorPage />} />
       {/* Ahead of /songs/:id for readability — React Router already ranks the
-          static segment above the dynamic one. */}
-      <Route path="/songs/library" element={<SongLibraryPage />} />
+          static segment above the dynamic one. Kept as a redirect rather than
+          deleted: an install upgraded from 1.0.0 can still be sitting on this
+          path in its restored window state, and the songs are all in /songs
+          now anyway. */}
+      <Route path="/songs/library" element={<Navigate to="/songs" replace />} />
       <Route path="/songs/:id" element={<SongPreviewPage />} />
       <Route path="/songs/:id/edit" element={<SongEditorPage />} />
 

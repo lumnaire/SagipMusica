@@ -46,6 +46,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { useSongs } from "@/features/songs/hooks/useSongs";
 import { deleteSong } from "@/features/songs/api";
 import { SONG_CATEGORIES } from "@/types/database";
+import { HAS_SHARED_LIBRARY } from "@/lib/build-target";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDistanceToNow } from "date-fns";
 
@@ -143,14 +144,18 @@ export function SongsListPage() {
           </div>
           {isAdmin && (
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => navigate("/songs/library")}
-              >
-                <Library className="h-4 w-4" />
-                Browse library
-              </Button>
+              {/* Absent on the desktop, where the whole library is already in
+                  this list and there is no catalog left to browse. */}
+              {HAS_SHARED_LIBRARY && (
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => navigate("/songs/library")}
+                >
+                  <Library className="h-4 w-4" />
+                  Browse library
+                </Button>
+              )}
               <Button className="w-full sm:w-auto" onClick={() => navigate("/songs/new")}>
                 <Plus className="h-4 w-4" />
                 Add Song

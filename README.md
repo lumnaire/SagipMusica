@@ -173,6 +173,10 @@ every new church automatically at signup), and the 399-hymn FBC hymnal imported 
 `0013_fbc_hymnal.sql`, which is browse-only so a new church doesn't open a hymnal
 with 419 songs in it.
 
+The desktop build does the opposite — it copies the whole library into the hymnal
+on first launch and has no library page at all. The reasoning is in
+[desktop/README.md](desktop/README.md#the-hymnal).
+
 `0013` is **generated** — edit `scripts/generate-hymnal-migration.mjs` and re-run it
 rather than hand-editing the SQL. 21 hymns whose words are still under copyright are
 imported as metadata only, with no lyrics; see

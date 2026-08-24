@@ -41,12 +41,25 @@ const DEFAULT_ACCENT = "#3730a3";
  *   * one `churches` row (0004), the only tenant this install will ever have;
  *   * the whole shared library (0008 + 0013) as `hymn_templates`, which is
  *     read-only here — it is the catalog shipped inside the installer;
- *   * the 20 `is_starter` hymns copied into `songs`, which is what
- *     seed_church_hymns() does on signup, so a fresh install already has a
- *     usable hymnal rather than an empty one.
+ *   * every published template copied into `songs`.
  *
- * `source_template_id` is set on those copies, matching the backfill in 0012,
- * so /songs/library correctly shows them as already added.
+ * That last step is where the desktop deliberately parts company with the
+ * hosted app. On the web, signup copies only the 20 `is_starter` hymns and the
+ * rest are browsed and added one at a time from /songs/library, because a
+ * church on a shared platform should not be handed 419 songs it did not ask
+ * for. Here the whole library already sits inside the installer with nothing
+ * to download and no one else to affect, so browsing a catalog to copy songs
+ * out of it is a step that buys the user nothing — the hymnal simply opens
+ * stocked. There is no library page on the desktop as a result.
+ *
+ * The 23 hymns whose words are still under copyright (`metadata_only`, see
+ * docs/hymnal-copyright-review.md) are copied too, and arrive as a title,
+ * author and key with no stanzas. That is on purpose: the church holds the
+ * licence, so the entry is there for them to type their own copy into rather
+ * than the hymn vanishing from the app entirely.
+ *
+ * `source_template_id` is set on every copy, matching the backfill in 0012, so
+ * a later version can tell a shipped hymn from one the church wrote itself.
  *
  * Idempotent by check: if a church row exists, this has already run.
  */
@@ -96,7 +109,7 @@ export function seedIfEmpty(db: Db, seedPath: string): boolean {
       insTemplateSection.run(newId(), s.template_id, s.type, s.title, s.lyrics, s.order_index);
     }
 
-    // Copy the starters into the church's own hymnal.
+    // Copy the whole published library into the church's own hymnal.
     const insSong = db.prepare(
       `insert into songs
          (id, church_id, title, author, composer, category, key, tempo, description,
@@ -113,11 +126,15 @@ export function seedIfEmpty(db: Db, seedPath: string): boolean {
        where template_id = ? order by order_index`,
     );
 
-    const starters = seed.templates
-      .filter((t) => t.is_starter === 1)
+    // Drafts are skipped for the same reason RLS hides them in 0012: an
+    // unfinished template is not something to put in front of a congregation.
+    // Nothing in the shipped seed is a draft today, so this is a guard on what
+    // a future `npm run seed` might pick up rather than a filter that bites.
+    const toCopy = seed.templates
+      .filter((t) => t.status === "published")
       .sort((a, b) => a.order_index - b.order_index);
 
-    for (const t of starters) {
+    for (const t of toCopy) {
       const songId = newId();
       insSong.run(
         songId,

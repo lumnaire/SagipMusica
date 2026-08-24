@@ -72,6 +72,9 @@ const dataLayerOverrides = [
     find: "@/components/layout/AppShell",
     replacement: desktop("renderer/components/AppShell.tsx"),
   },
+  // Not a data module either: the flags that tell a shared page which build it
+  // is running inside. See src/lib/build-target.ts.
+  { find: "@/lib/build-target", replacement: desktop("renderer/build-target.ts") },
 ];
 
 export default defineConfig({
@@ -130,7 +133,14 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        input: { index: desktop("renderer/index.html") },
+        input: {
+          index: desktop("renderer/index.html"),
+          // A second page, not part of the app: the boot splash, shown by the
+          // main process while the renderer bundle below is still parsing. It
+          // is built through Vite purely so its logo is hashed and emitted
+          // like every other asset, and so it is served over app:// too.
+          splash: desktop("renderer/splash.html"),
+        },
       },
     },
   },

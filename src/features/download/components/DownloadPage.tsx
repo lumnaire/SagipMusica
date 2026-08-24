@@ -28,19 +28,18 @@ import {
   INSTALL_STEPS,
   LIBRARY_CATEGORY_COUNT,
   LIBRARY_SONG_COUNT,
-  STARTER_SONG_COUNT,
 } from "../download-info";
 
 const FEATURES = [
   {
     icon: Library,
-    title: `${LIBRARY_SONG_COUNT} songs, already in the box`,
-    body: `The whole hymn library ships inside the installer, sorted across ${LIBRARY_CATEGORY_COUNT} categories. Browse it, search it, and add what your church sings to your own hymnal — no downloading song by song.`,
+    title: `${LIBRARY_SONG_COUNT} songs, already in your hymnal`,
+    body: `The whole hymn library ships inside the installer and every song is in your hymnal the first time you open it, sorted across ${LIBRARY_CATEGORY_COUNT} categories. Nothing to browse, add or download — search for a hymn and it is there.`,
   },
   {
     icon: WifiOff,
     title: "Runs with the internet unplugged",
-    body: `Your hymnal is a file on your computer, not a page that has to load. Nothing stalls mid-service because the church WiFi dropped, and ${STARTER_SONG_COUNT} hymns are already in your hymnal the first time you open it.`,
+    body: `Your hymnal is a file on your computer, not a page that has to load. Nothing stalls mid-service because the church WiFi dropped, and every hymn is on the machine before you have signed in to anything.`,
   },
   {
     icon: MonitorPlay,

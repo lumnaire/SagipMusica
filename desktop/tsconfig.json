@@ -33,6 +33,7 @@
       "@/stores/auth-store": ["./src/renderer/data/auth-store.ts"],
       "@/stores/church-store": ["./src/renderer/data/church-store.ts"],
       "@/components/layout/AppShell": ["./src/renderer/components/AppShell.tsx"],
+      "@/lib/build-target": ["./src/renderer/build-target.ts"],
       "@/*": ["../src/*"]
     }
   },

@@ -7,7 +7,7 @@
  */
 
 /** Matches `version` in desktop/package.json. */
-export const DESKTOP_VERSION = "1.0.0";
+export const DESKTOP_VERSION = "1.0.1";
 
 /** The .exe size, rounded the way a download page conventionally shows it. */
 export const DESKTOP_SIZE = "108 MB";
@@ -34,10 +34,14 @@ export const FACEBOOK_URL = "https://www.facebook.com/lumnaireph";
  * `LIBRARY_SONG_COUNT` is display copy, not an exact figure — the seed in
  * desktop/resources/hymnal-seed.json currently holds 419 templates, and "400+"
  * stays true as songs are added without needing an edit here every time.
+ *
+ * As of 1.0.1 there is no separate library to browse on the desktop: the first
+ * launch copies every one of those hymns straight into the church's hymnal
+ * (see desktop/src/main/db/seed.ts), which is why the copy below talks about
+ * what is *in the hymnal* rather than what is available to add.
  */
 export const LIBRARY_SONG_COUNT = "400+";
 export const LIBRARY_CATEGORY_COUNT = 33;
-export const STARTER_SONG_COUNT = 20;
 
 /**
  * What a first-time installer has to do, in order.
@@ -57,7 +61,7 @@ export const INSTALL_STEPS = [
     body: "Windows will say \"Windows protected your PC\" because this build is not code-signed yet — a certificate is on the list. Choose More info, then Run anyway.",
   },
   {
-    title: "Open it and start browsing",
-    body: `SagipMusica sets itself up on first launch and lands on a dashboard with ${STARTER_SONG_COUNT} hymns already in place. The rest of the library is under Songs → Library.`,
+    title: "Open it and start singing",
+    body: `SagipMusica sets itself up on first launch, and every one of the ${LIBRARY_SONG_COUNT} hymns is already in your hymnal under Songs. Nothing to add, nothing to download.`,
   },
 ];

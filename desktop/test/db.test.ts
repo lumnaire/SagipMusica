@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import path from "node:path";
+import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import Database from "better-sqlite3";
 import { closeDb, openDb } from "../src/main/db/connection";
 import { LATEST_VERSION, migrate } from "../src/main/db/migrate";
 import { seedIfEmpty } from "../src/main/db/seed";
@@ -14,6 +17,14 @@ import * as dashboard from "../src/main/db/repo/dashboard";
 import * as profile from "../src/main/db/repo/profile";
 
 const SEED = path.resolve(import.meta.dirname, "../resources/hymnal-seed.json");
+
+/**
+ * Read from the seed rather than hardcoded, so regenerating it with
+ * `npm run seed` does not turn every count below into a failing test.
+ */
+const PUBLISHED_TEMPLATES = (
+  JSON.parse(readFileSync(SEED, "utf8")) as { templates: { status: string }[] }
+).templates.filter((t) => t.status === "published").length;
 
 const form = (title: string, over: Partial<Record<string, string>> = {}) => ({
   title,
@@ -45,27 +56,148 @@ describe("migrate", () => {
   });
 });
 
-describe("seed", () => {
-  it("creates the one church and stocks the hymnal with the starters", () => {
-    expect(church.get().id).toBe(LOCAL_CHURCH_ID);
-    // 0008's twenty starter hymns, copied in the way signup does in the
-    // hosted app, so a fresh install is not an empty screen.
-    expect(songs.list()).toHaveLength(20);
-    expect(library.list().length).toBeGreaterThan(300);
+/**
+ * Step 2, on its own database.
+ *
+ * This is the upgrade path for the installs already in the field: 1.0.0 seeded
+ * the 20 starters and left the rest behind the library page that 1.0.1
+ * removes. Getting this wrong strands 399 hymns somewhere the user can no
+ * longer reach, so it is tested against a hand-built 1.0.0-shaped database
+ * rather than against the shipped seed.
+ */
+describe("migrate: adopting the library into the hymnal", () => {
+  function legacyInstall() {
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    // Builds the schema, then finds no church and does nothing.
+    migrate(db);
+    // Rewind: this install stopped at 1.0.0.
+    db.pragma("user_version = 1");
+
+    const ts = new Date().toISOString();
+    db.prepare(
+      `insert into churches (id, name, accent_color, created_at, updated_at)
+       values (?, 'My Church', '#3730a3', ?, ?)`,
+    ).run(LOCAL_CHURCH_ID, ts, ts);
+
+    const template = db.prepare(
+      `insert into hymn_templates
+         (id, title, author, composer, category, key, tempo, description,
+          status, is_starter, copyright_status, order_index, created_at, updated_at, updated_by)
+       values (?, ?, null, null, null, null, null, null, ?, ?, 'public_domain', ?, ?, ?, null)`,
+    );
+    const section = db.prepare(
+      `insert into hymn_template_sections (id, template_id, type, title, lyrics, order_index)
+       values (?, ?, 'verse', 'Verse 1', ?, 0)`,
+    );
+
+    // One starter (already copied in by 1.0.0), one published hymn that was
+    // only ever in the library, and one draft that must stay out of both.
+    template.run("t-starter", "Amazing Grace", "published", 1, 0, ts, ts);
+    template.run("t-library", "Rock of Ages", "published", 0, 1, ts, ts);
+    template.run("t-draft", "Half Written", "draft", 0, 2, ts, ts);
+    section.run("s-starter", "t-starter", "how sweet the sound");
+    section.run("s-library", "t-library", "cleft for me");
+    section.run("s-draft", "t-draft", "unfinished");
+
+    db.prepare(
+      `insert into songs
+         (id, church_id, title, source_template_id, created_at, updated_at)
+       values ('song-starter', ?, 'Amazing Grace', 't-starter', ?, ?)`,
+    ).run(LOCAL_CHURCH_ID, ts, ts);
+
+    return db;
+  }
+
+  it("copies the hymns that were only in the library, with their stanzas", () => {
+    const db = legacyInstall();
+
+    expect(migrate(db)).toBe(LATEST_VERSION);
+
+    const titles = (
+      db.prepare("select title from songs order by title").all() as { title: string }[]
+    ).map((r) => r.title);
+    expect(titles).toEqual(["Amazing Grace", "Rock of Ages"]);
+
+    const lyrics = db
+      .prepare(
+        `select x.lyrics from song_sections x
+         join songs s on s.id = x.song_id
+         where s.source_template_id = 't-library'`,
+      )
+      .get() as { lyrics: string };
+    expect(lyrics.lyrics).toBe("cleft for me");
+
+    db.close();
   });
 
-  it("marks the starters as already added, so the library page agrees", () => {
-    expect(library.addedTemplateIds()).toHaveLength(20);
+  it("does not duplicate the hymns the church already had", () => {
+    const db = legacyInstall();
+
+    migrate(db);
+    const after = db.prepare("select count(*) as n from songs").get() as { n: number };
+    // Running it again must not re-copy: user_version is stamped, and the
+    // NOT EXISTS guard would hold even if it were not.
+    migrate(db);
+    expect((db.prepare("select count(*) as n from songs").get() as { n: number }).n).toBe(
+      after.n,
+    );
+
+    db.close();
+  });
+
+  it("leaves a church's own songs alone", () => {
+    const db = legacyInstall();
+    const ts = new Date().toISOString();
+    db.prepare(
+      `insert into songs (id, church_id, title, source_template_id, created_at, updated_at)
+       values ('song-own', ?, 'Our Own Hymn', null, ?, ?)`,
+    ).run(LOCAL_CHURCH_ID, ts, ts);
+
+    migrate(db);
+
+    const own = db
+      .prepare("select count(*) as n from songs where title = 'Our Own Hymn'")
+      .get() as { n: number };
+    expect(own.n).toBe(1);
+
+    db.close();
+  });
+});
+
+describe("seed", () => {
+  it("creates the one church and puts the whole library in the hymnal", () => {
+    expect(church.get().id).toBe(LOCAL_CHURCH_ID);
+    // Not the 20 starters the hosted app copies on signup: the desktop has no
+    // library page to add the rest from, so every published hymn is copied in.
+    expect(songs.list()).toHaveLength(PUBLISHED_TEMPLATES);
+    expect(library.list()).toHaveLength(PUBLISHED_TEMPLATES);
+  });
+
+  it("marks every copy with the template it came from", () => {
+    expect(library.addedTemplateIds()).toHaveLength(PUBLISHED_TEMPLATES);
   });
 
   it("does not run twice", () => {
     expect(seedIfEmpty(openDb(), SEED)).toBe(false);
-    expect(songs.list()).toHaveLength(20);
+    expect(songs.list()).toHaveLength(PUBLISHED_TEMPLATES);
   });
 
-  it("gives every starter its stanzas", () => {
-    const [first] = songs.list();
-    expect(songs.get(first.id).sections.length).toBeGreaterThan(0);
+  it("gives every copied hymn the stanzas its template had", () => {
+    const db = openDb();
+    // The 23 metadata-only hymns ship with no stanzas on purpose (see
+    // docs/hymnal-copyright-review.md), so this compares against the template
+    // rather than asserting every song has lyrics.
+    const mismatched = db
+      .prepare(
+        `select count(*) as n from songs s
+         where s.source_template_id is not null
+           and (select count(*) from song_sections x where x.song_id = s.id)
+             <> (select count(*) from hymn_template_sections y
+                 where y.template_id = s.source_template_id)`,
+      )
+      .get() as { n: number };
+    expect(mismatched.n).toBe(0);
   });
 });
 
@@ -152,13 +284,35 @@ describe("sections.save", () => {
 });
 
 describe("library.addToChurch", () => {
-  it("copies the template and its stanzas into the hymnal", () => {
-    const entry = library.list().find((t) => !library.addedTemplateIds().includes(t.id));
-    expect(entry).toBeDefined();
+  /**
+   * Every shipped template is in the hymnal from the first launch, so a test
+   * that needs an unadded one has to make it. The path is still exercised
+   * because it is what a future release adding hymns to the seed will use.
+   */
+  function unaddedTemplate(): string {
+    const db = openDb();
+    const id = "test-template-" + randomUUID();
+    const ts = new Date().toISOString();
+    db.prepare(
+      `insert into hymn_templates
+         (id, title, author, composer, category, key, tempo, description,
+          status, is_starter, copyright_status, order_index, created_at, updated_at, updated_by)
+       values (?, 'A Later Addition', null, null, null, null, null, null,
+               'published', 0, 'public_domain', 9999, ?, ?, null)`,
+    ).run(id, ts, ts);
+    db.prepare(
+      `insert into hymn_template_sections (id, template_id, type, title, lyrics, order_index)
+       values (?, ?, 'verse', 'Verse 1', 'words', 0)`,
+    ).run(randomUUID(), id);
+    return id;
+  }
 
-    const song = library.addToChurch(entry!.id);
-    expect(song.source_template_id).toBe(entry!.id);
-    expect(songs.get(song.id).sections).toHaveLength(entry!.section_count);
+  it("copies the template and its stanzas into the hymnal", () => {
+    const templateId = unaddedTemplate();
+
+    const song = library.addToChurch(templateId);
+    expect(song.source_template_id).toBe(templateId);
+    expect(songs.get(song.id).sections).toHaveLength(1);
   });
 
   it("reports a second add as ALREADY_IN_HYMNAL rather than a SQL error", () => {
