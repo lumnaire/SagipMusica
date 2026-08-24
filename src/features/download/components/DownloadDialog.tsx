@@ -215,10 +215,10 @@ export function DownloadDialog({ children }: { children: ReactNode }) {
                 {pending === "church" ? "Starting…" : "Start the download"}
               </Button>
 
-              {/* The way out for anyone not with a church. It has to be a real
+              {/* {/* The way out for anyone not with a church. It has to be a real
                   offer rather than a grudging one: a required church field
                   either turns them away or gets filled in with something
-                  invented, and both are worse than an honest visitor row. */}
+                  invented, and both are worse than an honest visitor row. 
               <Button
                 type="button"
                 variant="ghost"
@@ -230,7 +230,7 @@ export function DownloadDialog({ children }: { children: ReactNode }) {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : null}
                 I'm not with a church — I just want to explore the software
-              </Button>
+              </Button> */}
 
               <p className="text-center text-xs leading-relaxed text-muted-foreground">
                 Version {DESKTOP_VERSION} · {DESKTOP_SIZE} · Windows 10 &amp; 11
