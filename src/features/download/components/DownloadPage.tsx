@@ -27,7 +27,6 @@ import {
   FACEBOOK_URL,
   LIBRARY_CATEGORY_COUNT,
   LIBRARY_SONG_COUNT,
-  RELEASES_URL,
   STARTER_SONG_COUNT,
 } from "../download-info";
 
@@ -305,8 +304,7 @@ export function DownloadPage() {
               </Button>
 
               <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
-                Released {DESKTOP_RELEASED}.{" "}
-
+                Released {DESKTOP_RELEASED}.
               </p>
             </div>
           </Reveal>

@@ -28,7 +28,13 @@ export const RELEASES_URL = "https://github.com/lumnaire/fbc-worship-tool/releas
 
 export const FACEBOOK_URL = "https://www.facebook.com/lumnaireph";
 
-/** Sizes of the bundled hymn library — see desktop/resources/hymnal-seed.json. */
+/**
+ * What the page says about the bundled hymn library.
+ *
+ * `LIBRARY_SONG_COUNT` is display copy, not an exact figure — the seed in
+ * desktop/resources/hymnal-seed.json currently holds 419 templates, and "400+"
+ * stays true as songs are added without needing an edit here every time.
+ */
 export const LIBRARY_SONG_COUNT = "400+";
 export const LIBRARY_CATEGORY_COUNT = 33;
 export const STARTER_SONG_COUNT = 20;
