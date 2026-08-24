@@ -214,3 +214,14 @@ MIDI/stage display features. The architecture (a network-independent
 presentation engine driven by `BroadcastChannel`, and a `church_id`-scoped
 schema) is built to make most of these additive rather than requiring a
 rewrite.
+
+## Licence
+
+[MIT](LICENSE) — use it, fork it, ship it, sell it; just keep the copyright
+notice.
+
+One thing the licence does not cover: the hymn texts. Everything shipped here
+is believed to be public domain, and the hymns whose words are still under
+copyright are included as metadata only, with no lyrics — see
+[docs/hymnal-copyright-review.md](docs/hymnal-copyright-review.md). If you add
+hymn texts to a fork, their licensing is yours to sort out.

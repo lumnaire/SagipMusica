@@ -1,0 +1,40 @@
+MIT License
+
+Copyright (c) 2026 Lumnaire
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+NOTE ON THE HYMN LIBRARY
+
+This licence covers the SOFTWARE only. It does not grant any rights in the
+hymn texts distributed alongside it.
+
+The library seeded by supabase/migrations/0013_fbc_hymnal.sql and by
+desktop/resources/hymnal-seed.json is made up of hymns believed to be in the
+public domain. Hymns whose words are still under copyright are shipped as
+metadata only — title, author, composer and key, with no lyrics — precisely so
+that no copyrighted text is redistributed here. See
+docs/hymnal-copyright-review.md for the review behind that, including the
+titles still awaiting a human check.
+
+If you fork this project and add hymn texts of your own, the licence covering
+those texts is yours to determine and yours to comply with. A CCLI licence or
+equivalent is the church's responsibility, not this project's.
