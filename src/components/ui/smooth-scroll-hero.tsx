@@ -65,6 +65,13 @@ const SmoothScrollHeroBackground: React.FC<
 		["170%", "100%"],
 	);
 
+	// The desktop art is landscape, so sizing it by width fills the frame.
+	// The mobile art is a portrait crop and a phone viewport is taller still,
+	// so the same width-based size would letterbox it — pin it to the height
+	// instead and let the sides crop.
+	const mobileZoom = useTransform(scrollY, [0, scrollHeight + 500], [170, 100]);
+	const mobileBackgroundSize = useMotionTemplate`auto ${mobileZoom}%`;
+
 	return (
 		<motion.div
 			className="sticky top-0 h-screen w-full bg-black"
@@ -78,7 +85,7 @@ const SmoothScrollHeroBackground: React.FC<
 				className="absolute inset-0 md:hidden"
 				style={{
 					backgroundImage: `url(${mobileImage})`,
-					backgroundSize,
+					backgroundSize: mobileBackgroundSize,
 					backgroundPosition: "center",
 					backgroundRepeat: "no-repeat",
 				}}

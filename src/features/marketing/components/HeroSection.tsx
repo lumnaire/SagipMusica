@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SmoothScrollHero from "@/components/ui/smooth-scroll-hero";
 import heroImage from "@/assets/hero-img.avif";
+import heroImageMobile from "@/assets/hero-img-responsive-mobile.jpg";
 
 const SCROLL_HEIGHT = 1200;
 
@@ -15,9 +16,11 @@ export function HeroSection() {
   // The clip is a square inset applied to both axes, so the same percentage
   // that frames the image nicely on a wide screen reduces it to a narrow
   // vertical strip on a phone. Start closer to full-bleed there.
+  // Matches the md breakpoint where SmoothScrollHero swaps to the portrait
+  // crop, so the framing and the image change over together.
   const [isNarrow, setIsNarrow] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)");
+    const mq = window.matchMedia("(max-width: 767px)");
     const update = () => setIsNarrow(mq.matches);
     update();
     mq.addEventListener("change", update);
@@ -37,7 +40,7 @@ export function HeroSection() {
       <SmoothScrollHero
         scrollHeight={SCROLL_HEIGHT}
         desktopImage={heroImage}
-        mobileImage={heroImage}
+        mobileImage={heroImageMobile}
         initialClipPercentage={isNarrow ? 5 : 14}
         finalClipPercentage={isNarrow ? 95 : 86}
       />
