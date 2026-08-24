@@ -15,36 +15,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase/client";
 import {
   AlreadyInHymnalError,
   addLibrarySongToChurch,
   fetchAddedTemplateIds,
+  fetchHymnLibrary,
+  type LibraryEntry,
 } from "@/features/songs/api";
-import { SONG_CATEGORIES, type HymnTemplate } from "@/types/database";
-
-interface LibraryEntry extends HymnTemplate {
-  section_count: number;
-}
-
-/**
- * The shared catalog an encoder maintains. RLS only returns published rows to
- * anyone who isn't an encoder, so no status filter is needed here.
- */
-async function fetchLibrary(): Promise<LibraryEntry[]> {
-  const { data, error } = await supabase
-    .from("hymn_templates")
-    .select("*, hymn_template_sections(count)")
-    .order("title", { ascending: true });
-  if (error) throw error;
-
-  return (data ?? []).map((row) => {
-    const { hymn_template_sections, ...template } = row as HymnTemplate & {
-      hymn_template_sections: { count: number }[];
-    };
-    return { ...template, section_count: hymn_template_sections?.[0]?.count ?? 0 };
-  });
-}
+import { SONG_CATEGORIES } from "@/types/database";
 
 export function SongLibraryPage() {
   const navigate = useNavigate();
@@ -59,7 +37,7 @@ export function SongLibraryPage() {
     setLoading(true);
     try {
       const [library, addedIds] = await Promise.all([
-        fetchLibrary(),
+        fetchHymnLibrary(),
         fetchAddedTemplateIds(),
       ]);
       setEntries(library);

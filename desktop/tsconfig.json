@@ -1,0 +1,66 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@shared/*": ["./src/shared/*"],
+      "@/features/songs/api": ["./src/renderer/data/songs.ts"],
+      "@/features/songs/hooks/useSongs": ["./src/renderer/data/useSongs.ts"],
+      "@/features/worship-sets/api": ["./src/renderer/data/worship-sets.ts"],
+      "@/features/dashboard/api": ["./src/renderer/data/dashboard.ts"],
+      "@/lib/save-sections": ["./src/renderer/data/save-sections.ts"],
+      "@/features/presentation/engine/loadPresentation": [
+        "./src/renderer/data/loadPresentation.ts"
+      ],
+      "@/features/presentation/engine/channel": ["./src/renderer/data/channel.ts"],
+      "@/stores/auth-store": ["./src/renderer/data/auth-store.ts"],
+      "@/stores/church-store": ["./src/renderer/data/church-store.ts"],
+      "@/components/layout/AppShell": ["./src/renderer/components/AppShell.tsx"],
+      "@/*": ["../src/*"]
+    }
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./test/**/*.ts",
+    "electron.vite.config.ts",
+    "vitest.config.ts",
+    "../src/**/*.ts",
+    "../src/**/*.tsx"
+  ],
+  "exclude": [
+    "../src/**/*.test.ts",
+    "../src/**/*.test.tsx",
+    "../src/test/**",
+    "../src/features/encoder/**",
+    "../src/features/superadmin/**",
+    "../src/features/onboarding/**",
+    "../src/features/marketing/**",
+    "../src/features/legal/**",
+    "../src/features/auth/**",
+    "../src/lib/presence.ts",
+    "../src/components/layout/AppShell.tsx",
+    "../src/features/dashboard/components/SettingsPage.tsx",
+    "../src/lib/supabase/**",
+    "../src/App.tsx",
+    "../src/main.tsx",
+    "../src/routes/AppRoutes.tsx"
+  ]
+}

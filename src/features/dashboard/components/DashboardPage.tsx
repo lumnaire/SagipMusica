@@ -7,19 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { useChurchStore } from "@/stores/church-store";
+import {
+  fetchDashboardStats,
+  markOnboardingComplete,
+  type DashboardStats,
+} from "@/features/dashboard/api";
 import { WelcomeDialog } from "./WelcomeDialog";
-import type { Song } from "@/types/database";
 import "driver.js/dist/driver.css";
-
-interface DashboardStats {
-  totalSongs: number;
-  totalHymns: number;
-  totalSets: number;
-  recentSongs: Song[];
-}
 
 function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -28,23 +24,9 @@ function useDashboardStats() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [songsCount, hymnsCount, setsCount, recent] = await Promise.all([
-        supabase.from("songs").select("*", { count: "exact", head: true }),
-        supabase
-          .from("songs")
-          .select("*", { count: "exact", head: true })
-          .eq("category", "Hymn"),
-        supabase.from("worship_sets").select("*", { count: "exact", head: true }),
-        supabase.from("songs").select("*").order("created_at", { ascending: false }).limit(5),
-      ]);
-
+      const next = await fetchDashboardStats();
       if (cancelled) return;
-      setStats({
-        totalSongs: songsCount.count ?? 0,
-        totalHymns: hymnsCount.count ?? 0,
-        totalSets: setsCount.count ?? 0,
-        recentSongs: (recent.data ?? []) as Song[],
-      });
+      setStats(next);
       setLoading(false);
     })();
     return () => {
@@ -77,7 +59,7 @@ export function DashboardPage() {
         // first thing they see after the walkthrough is that the hymnal is
         // already stocked.
         setShowWelcome(true);
-        await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", profile.id);
+        await markOnboardingComplete(profile.id);
         await refreshProfile();
       };
 

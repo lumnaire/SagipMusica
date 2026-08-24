@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
@@ -43,6 +44,20 @@ export function MarketingNav({ solid = false }: { solid?: boolean }) {
         </Link>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          {/* The icon carries the meaning below `xs`, where the label would
+              crowd the two actions beside it off the bar. */}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 px-2.5 text-white hover:bg-white/15 hover:text-white sm:h-10 sm:px-4"
+          >
+            <Link to="/download">
+              <Download className="h-4 w-4" />
+              <span className="hidden xs:inline">Download</span>
+              <span className="sr-only xs:hidden">Download the desktop app</span>
+            </Link>
+          </Button>
           <Button
             asChild
             variant="ghost"

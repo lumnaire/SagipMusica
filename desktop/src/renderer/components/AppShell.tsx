@@ -1,0 +1,219 @@
+import { type ReactNode, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Music2,
+  ListMusic,
+  Settings,
+  Menu,
+  X,
+  Tags,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
+import { useChurchStore } from "@/stores/church-store";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
+
+/**
+ * Desktop stand-in for src/components/layout/AppShell.tsx.
+ *
+ * The one component outside `data/` that is aliased, because the frame is
+ * where the two builds genuinely differ rather than just fetching differently:
+ * there is no account to sign out of and no role to display, so the web
+ * shell's footer controls would be dead controls. Everything else — the nav
+ * sections, the active-item rules, the tour anchors the dashboard drives — is
+ * kept identical on purpose.
+ */
+interface NavLocation {
+  pathname: string;
+  search: string;
+}
+
+interface NavItem {
+  label: string;
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** Anchor for the onboarding spotlight tour (see DashboardPage). */
+  tourId?: string;
+  isActive?: (location: NavLocation) => boolean;
+}
+
+interface NavSection {
+  title: string | null;
+  items: NavItem[];
+}
+
+function isCategoriesView(location: NavLocation) {
+  return new URLSearchParams(location.search).get("view") === "categories";
+}
+
+const NAV: NavSection[] = [
+  {
+    title: null,
+    items: [
+      { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, tourId: "nav-dashboard" },
+    ],
+  },
+  {
+    title: "Hymnal",
+    items: [
+      {
+        label: "Songs",
+        to: "/songs",
+        icon: Music2,
+        tourId: "nav-songs",
+        isActive: (loc) => loc.pathname.startsWith("/songs") && !isCategoriesView(loc),
+      },
+      {
+        label: "Categories",
+        to: "/songs?view=categories",
+        icon: Tags,
+        isActive: (loc) => loc.pathname === "/songs" && isCategoriesView(loc),
+      },
+    ],
+  },
+  {
+    title: "Worship",
+    items: [{ label: "Worship Sets", to: "/sets", icon: ListMusic, tourId: "nav-sets" }],
+  },
+  {
+    title: null,
+    items: [{ label: "Settings", to: "/settings", icon: Settings, tourId: "nav-settings" }],
+  },
+];
+
+function isNavItemActive(item: NavItem, location: NavLocation): boolean {
+  if (item.isActive) return item.isActive(location);
+  const targetPathname = item.to.split("?")[0];
+  return location.pathname === targetPathname || location.pathname.startsWith(`${targetPathname}/`);
+}
+
+function initialsFor(name: string | null, churchName: string | undefined) {
+  if (name && name.trim().length > 0) {
+    const parts = name.trim().split(/\s+/);
+    return parts
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join("");
+  }
+  return churchName?.[0]?.toUpperCase() ?? "?";
+}
+
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const profile = useAuthStore((s) => s.profile);
+  const church = useChurchStore((s) => s.church);
+  const location = useLocation();
+
+  return (
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <img src={sagipmusicaLogo} alt="" className="h-10 w-10 shrink-0 object-contain" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold leading-tight">
+            {church?.name ?? "SagipMusica"}
+          </p>
+          <p className="text-xs text-sidebar-foreground/60">SagipMusica</p>
+        </div>
+      </div>
+
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
+        {NAV.map((section, i) => (
+          <div key={i}>
+            {section.title && (
+              <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/45">
+                {section.title}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const active = isNavItemActive(item, location);
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    onClick={onNavigate}
+                    data-tour-id={item.tourId}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      <div className="border-t border-sidebar-border p-3">
+        <Link
+          to="/settings"
+          onClick={onNavigate}
+          className="flex items-center gap-2.5 rounded-md px-2 py-2 transition-colors hover:bg-sidebar-accent/60"
+        >
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-xs">
+              {initialsFor(profile?.name ?? null, church?.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">
+              {profile?.name || "This computer"}
+            </p>
+            <p className="truncate text-xs text-sidebar-foreground/55">
+              Saved on this device
+            </p>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const church = useChurchStore((s) => s.church);
+
+  return (
+    <div className="flex min-h-svh bg-muted/30">
+      {/* Sidebar. The window has a 1024px minimum, so this is always visible;
+          the narrow branch below survives only because the reused pages are
+          written against the same breakpoints. */}
+      <aside className="hidden w-64 shrink-0 md:block">
+        <div className="fixed h-svh w-64">
+          <SidebarContent />
+        </div>
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="absolute left-0 top-0 h-full w-64">
+            <SidebarContent onNavigate={() => setMobileOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      <div className="flex min-h-svh flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+          <img src={sagipmusicaLogo} alt="" className="h-7 w-7 object-contain" />
+          <p className="truncate text-sm font-semibold">{church?.name ?? "SagipMusica"}</p>
+        </header>
+        <main className="flex-1 p-4 md:p-8">{children}</main>
+      </div>
+    </div>
+  );
+}

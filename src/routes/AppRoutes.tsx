@@ -8,6 +8,7 @@ import { SuperAdminPage } from "@/features/superadmin/components/SuperAdminPage"
 import { EncoderRoute } from "@/features/auth/components/EncoderRoute";
 import { EncoderPage } from "@/features/encoder/components/EncoderPage";
 import { TemplateEditorPage } from "@/features/encoder/components/TemplateEditorPage";
+import { DownloadPage } from "@/features/download/components/DownloadPage";
 import { TermsPage } from "@/features/legal/components/TermsPage";
 import { PrivacyPage } from "@/features/legal/components/PrivacyPage";
 import { CookiePolicyPage } from "@/features/legal/components/CookiePolicyPage";
@@ -31,6 +32,7 @@ export function AppRoutes() {
       <Route path="/signup" element={<SignupPage />} />
 
       {/* Public: reachable signed in or out, and linkable from anywhere. */}
+      <Route path="/download" element={<DownloadPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/cookies" element={<CookiePolicyPage />} />

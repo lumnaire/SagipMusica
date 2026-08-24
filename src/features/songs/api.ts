@@ -188,3 +188,27 @@ export async function addLibrarySongToChurch(templateId: string): Promise<Song> 
 
   return song;
 }
+
+/** A library template plus its stanza count, for the library page. */
+export interface LibraryEntry extends HymnTemplate {
+  section_count: number;
+}
+
+/**
+ * The shared catalog an encoder maintains. RLS only returns published rows to
+ * anyone who isn't an encoder, so no status filter is needed here.
+ */
+export async function fetchHymnLibrary(): Promise<LibraryEntry[]> {
+  const { data, error } = await supabase
+    .from("hymn_templates")
+    .select("*, hymn_template_sections(count)")
+    .order("title", { ascending: true });
+  if (error) throw error;
+
+  return (data ?? []).map((row) => {
+    const { hymn_template_sections, ...template } = row as HymnTemplate & {
+      hymn_template_sections: { count: number }[];
+    };
+    return { ...template, section_count: hymn_template_sections?.[0]?.count ?? 0 };
+  });
+}

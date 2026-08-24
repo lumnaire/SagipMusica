@@ -19,6 +19,10 @@ export default defineConfig({
     ],
   },
   test: {
+    // The desktop app has its own suite: main-process code that runs in Node
+    // against a real SQLite file, with `electron` aliased to a stub. It cannot
+    // run under this jsdom config, so it stays behind `npm test` in desktop/.
+    exclude: ["**/node_modules/**", "**/dist/**", "desktop/**"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],

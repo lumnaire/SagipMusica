@@ -81,6 +81,11 @@ export function MarketingFooter() {
               <h2 className="eyebrow text-[0.6875rem] sm:text-xs">Product</h2>
               <ul className="mt-3.5 space-y-2.5 text-xs sm:mt-4 sm:text-sm">
                 <li>
+                  <Link to="/download" className={LINK_CLASS}>
+                    Download for Windows
+                  </Link>
+                </li>
+                <li>
                   <Link to="/signup" className={LINK_CLASS}>
                     Create an account
                   </Link>

@@ -1,0 +1,78 @@
+# Packaging for the installers.
+#
+# `npm run build:win` produces an NSIS .exe; `npm run build:mac` produces a
+# .dmg. Each has to run on its own platform — electron-builder cannot make a
+# macOS disk image from Windows.
+
+appId: com.lumnaire.sagipmusica
+productName: SagipMusica
+copyright: Copyright © Lumnaire
+
+directories:
+  # build/icon.png (1024x1024) is the only icon source; electron-builder
+  # derives the .ico and .icns from it.
+  buildResources: build
+  output: release
+
+# Only the compiled output and the manifest. The renderer, main and preload
+# bundles in out/ already contain everything from ../src, so the web app's
+# source tree is not shipped.
+files:
+  - out/**
+  - package.json
+  - "!**/*.map"
+
+# The hymn library the app seeds itself from on first run. It lives beside
+# app.asar rather than inside it because main/index.ts reads it straight from
+# process.resourcesPath.
+extraResources:
+  - from: resources/hymnal-seed.json
+    to: hymnal-seed.json
+
+asar: true
+# better-sqlite3's compiled binding cannot be loaded from inside an asar
+# archive; it has to sit on the real filesystem.
+asarUnpack:
+  - "**/*.node"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # Deliberately versionless. The website's download button points at GitHub's
+  # `releases/latest/download/<asset>` redirect, which resolves by FILENAME —
+  # so putting the version in it would break that link on every release. The
+  # version still travels with the release tag and shows in Settings > About.
+  artifactName: ${productName}-Setup.${ext}
+
+nsis:
+  # A per-user install needs no administrator prompt, which matters for the
+  # volunteer running this on a shared church computer.
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: SagipMusica
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  category: public.app-category.productivity
+  artifactName: ${productName}-${arch}.${ext}
+  # Unsigned builds: the app is not distributed through the App Store and
+  # there is no Developer ID certificate yet. Gatekeeper will ask the user to
+  # confirm the first launch (right-click > Open). Set these to true and add
+  # signing credentials once a certificate exists.
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  identity: null
+
+dmg:
+  artifactName: ${productName}-${arch}.${ext}
+
+linux:
+  target:
+    - AppImage
+  category: Audio

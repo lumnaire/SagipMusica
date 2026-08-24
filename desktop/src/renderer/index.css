@@ -1,0 +1,55 @@
+/*
+ * The desktop stylesheet.
+ *
+ * Every token, component style and dark-mode rule comes from the web app's
+ * src/index.css, imported verbatim below. This file only does the two things
+ * that have to differ.
+ *
+ *   1. Tailwind's source scan. Tailwind v4 detects classes relative to the CSS
+ *      file, and the renderer root is desktop/src/renderer while nearly every
+ *      component lives in ../../../src. Without the @source rules the build
+ *      emits a stylesheet with almost none of the utilities the reused pages
+ *      use, and the app renders unstyled.
+ *
+ *   2. Fonts. index.html pulls Inter and Fraunces from fonts.googleapis.com in
+ *      the web build. The desktop CSP allows no remote origin at all, and the
+ *      app has to look right with the network unplugged, so the same two
+ *      families are declared below from the bundled @fontsource-variable
+ *      files.
+ *
+ *      They are declared under the bare names "Inter" and "Fraunces" — the
+ *      names src/index.css and DEFAULT_PRESENTATION_STYLE already ask for —
+ *      rather than importing fontsource's own stylesheets, which register them
+ *      as "Inter Variable" and "Fraunces Variable" and would leave every one
+ *      of those references falling through to the system font.
+ */
+
+@import "../../../src/index.css";
+
+@source "../../../src";
+@source "./";
+
+/*
+ * Paths are relative rather than bare package specifiers so Vite's CSS url()
+ * rewriting resolves and fingerprints them without depending on node
+ * resolution inside a stylesheet.
+ */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
+    format("woff2-variations");
+}
+
+/* The `full` cut keeps Fraunces' optical-size axis, which .font-display in
+   src/index.css drives with `font-optical-sizing: auto`. */
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2")
+    format("woff2-variations");
+}
