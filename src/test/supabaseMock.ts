@@ -21,6 +21,7 @@ export function createQueryBuilderMock(response: QueryResponse = { data: [], err
     "order",
     "limit",
     "single",
+    "maybeSingle",
   ];
   for (const method of chainMethods) {
     builder[method] = vi.fn(() => builder);

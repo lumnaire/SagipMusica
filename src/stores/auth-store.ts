@@ -25,17 +25,55 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
-  if (error) {
-    console.error("Failed to load profile", error);
-    return null;
+/**
+ * Why this is three outcomes and not `Profile | null`.
+ *
+ * "The row is gone" and "we could not reach the database" look identical
+ * through a nullable return, and the caller has to do opposite things with
+ * them: the first means the account no longer exists and the session should
+ * end, the second means try again later. Collapsing them is what let a dropped
+ * request sign a working account out.
+ */
+type ProfileResult =
+  | { kind: "ok"; profile: Profile }
+  | { kind: "missing" }
+  | { kind: "error"; message: string };
+
+const RETRY_DELAYS_MS = [250, 600];
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Reads the signed-in user's profile, retrying a couple of times before giving
+ * up. The retries are there because this one query gates the whole app: until
+ * it resolves the user has no role, so every route guard treats them as a
+ * stranger. A single dropped request should not cost somebody their session.
+ *
+ * `maybeSingle` rather than `single`: an absent row is an answer, not an error,
+ * and `single` reports it the same way it reports a network failure.
+ */
+async function fetchProfile(userId: string): Promise<ProfileResult> {
+  let message = "Could not reach the server.";
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!error) {
+      return data ? { kind: "ok", profile: data as Profile } : { kind: "missing" };
+    }
+
+    message = error.message;
+    console.error(`Failed to load profile (attempt ${attempt + 1})`, error);
+    if (attempt < RETRY_DELAYS_MS.length) await delay(RETRY_DELAYS_MS[attempt]);
   }
-  return data as Profile;
+
+  return { kind: "error", message };
 }
 
 /**
@@ -49,27 +87,82 @@ const TOO_SHORT = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
 
 let initialized = false;
 
-// A session can outlive the account it points to -- e.g. the user (and
-// their profiles row) was deleted from the Supabase dashboard, but the
-// browser still has a cached, technically-unexpired session in
-// localStorage. Treat "session exists but profile lookup finds nothing" as
-// effectively logged out rather than as an authenticated user with no
-// profile, which every other part of the app assumes can't happen.
+/**
+ * Bumped by every applySession call. A run whose generation is no longer the
+ * current one has been overtaken and must not write its result.
+ *
+ * Two runs really do overlap: initialize() applies the session it read with
+ * getSession(), and subscribing to onAuthStateChange immediately delivers
+ * INITIAL_SESSION for that same session. Both then fetch the profile, and
+ * whichever finished last used to win -- including a run that had already
+ * decided to sign the user out.
+ */
+let applyGeneration = 0;
+
+const PROFILE_UNAVAILABLE =
+  "We couldn't load your account just now. Please try signing in again.";
+
+/**
+ * Moves a Supabase session into the store, resolving the profile that goes
+ * with it.
+ *
+ * The three failure paths are deliberately different:
+ *
+ *   missing  The account is genuinely gone -- deleted from the dashboard while
+ *            the browser still held a valid session. End the session; every
+ *            other part of the app assumes an authenticated user has a profile.
+ *
+ *   error    We could not read it. Keep the stored Supabase session and report
+ *            the user as signed out in this tab only, so a reload or a fresh
+ *            sign-in recovers. Signing out here is what used to destroy a
+ *            perfectly good session over one failed request, and it is why a
+ *            refresh landed back on the login page.
+ *
+ *   ok       Normal.
+ */
 async function applySession(
   session: Session | null,
   set: (state: Partial<AuthState>) => void,
+  get: () => AuthState,
 ) {
+  const generation = ++applyGeneration;
+  const superseded = () => generation !== applyGeneration;
+
   if (!session) {
     set({ session: null, profile: null, status: "unauthenticated" });
     return;
   }
-  const profile = await fetchProfile(session.user.id);
-  if (!profile) {
+
+  // Same account, new tokens. TOKEN_REFRESHED fires roughly hourly and again
+  // whenever the tab regains focus; re-reading the profile on each one is a
+  // round trip that buys nothing and can fail.
+  const held = get().profile;
+  if (held && held.id === session.user.id) {
+    set({ session, status: "authenticated", error: null });
+    return;
+  }
+
+  const result = await fetchProfile(session.user.id);
+  if (superseded()) return;
+
+  if (result.kind === "missing") {
     await supabase.auth.signOut();
+    if (superseded()) return;
     set({ session: null, profile: null, status: "unauthenticated" });
     return;
   }
-  set({ session, profile, status: "authenticated" });
+
+  if (result.kind === "error") {
+    set({
+      session: null,
+      profile: null,
+      status: "unauthenticated",
+      error: PROFILE_UNAVAILABLE,
+    });
+    return;
+  }
+
+  set({ session, profile: result.profile, status: "authenticated", error: null });
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -85,10 +178,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    await applySession(session, set);
+    await applySession(session, set, get);
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
-      await applySession(session, set);
+      await applySession(session, set, get);
     });
   },
 
@@ -145,8 +238,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshProfile: async () => {
     const userId = get().session?.user.id;
     if (!userId) return;
-    const profile = await fetchProfile(userId);
-    set({ profile });
+    const result = await fetchProfile(userId);
+    // Only ever replace a profile with a better one. Writing null here would
+    // leave the store authenticated with no role, and every route guard reads
+    // profile.role -- a failed refresh would bounce the user off the page they
+    // were already on.
+    if (result.kind === "ok") set({ profile: result.profile });
   },
 
   updateName: async (name) => {

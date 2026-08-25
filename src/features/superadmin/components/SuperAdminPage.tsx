@@ -14,6 +14,7 @@ import {
   Library,
   UserCog,
   MonitorDown,
+  TriangleAlert,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ export function SuperAdminPage() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [accounts, setAccounts] = useState<PlatformAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [onlineCount, setOnlineCount] = useState(0);
   const [presenceStatus, setPresenceStatus] = useState<PresenceStatus>("idle");
@@ -78,13 +80,19 @@ export function SuperAdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [s, a] = await Promise.all([fetchPlatformStats(), fetchPlatformAccounts()]);
       setStats(s);
       setAccounts(a);
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Couldn't load platform data.");
+      // Reported in the page rather than only in a toast. A toast that has
+      // faded leaves an empty dashboard with nothing to act on, which is what
+      // made a failed load look like the page itself was broken.
+      setLoadError(
+        err instanceof Error ? err.message : "Couldn't load platform data.",
+      );
     } finally {
       setLoading(false);
     }
@@ -197,6 +205,31 @@ export function SuperAdminPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        {loadError && !loading && (
+          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <TriangleAlert className="h-5 w-5 shrink-0 text-destructive" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  Couldn't load platform data
+                </p>
+                <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                  {loadError}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => void load()}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try again
+            </Button>
+          </div>
+        )}
+
         {/* Seven cards, so they sit four-then-three rather than being squeezed
             into one row that makes every label wrap. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
@@ -485,9 +518,11 @@ function StatCard({
   live?: boolean;
   note?: string;
 }) {
-  // A dash rather than 0 when the channel isn't live: "nobody online" and
-  // "not connected" must not look the same.
-  const disconnected = note !== undefined && note !== "distinct people";
+  // A dash rather than 0 when the number isn't known: "nobody online" and "not
+  // connected" must not look the same, and neither must "no accounts" and "the
+  // stats query failed".
+  const disconnected =
+    value === undefined || (note !== undefined && note !== "distinct people");
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 pb-2">

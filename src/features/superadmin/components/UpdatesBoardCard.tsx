@@ -44,6 +44,7 @@ const DETAIL_MAX = 600;
  */
 export function UpdatesBoardCard() {
   const [updates, setUpdates] = useState<PlatformUpdate[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const [saving, setSaving] = useState(false);
@@ -54,10 +55,15 @@ export function UpdatesBoardCard() {
   const load = useCallback(async () => {
     try {
       setUpdates(await fetchAllUpdates());
+      setLoadError(null);
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Couldn't load the updates board.");
-      setUpdates([]);
+      // Not setUpdates([]) -- an empty board and an unreadable one would then
+      // render the same "nothing here" message, and only one of them is true.
+      setUpdates(null);
+      setLoadError(
+        err instanceof Error ? err.message : "Couldn't load the updates board.",
+      );
     }
   }, []);
 
@@ -178,7 +184,24 @@ export function UpdatesBoardCard() {
 
         <div className="my-5 h-px bg-border" aria-hidden="true" />
 
-        {updates === null ? (
+        {loadError ? (
+          <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="min-w-0 break-words text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                Couldn't load the board.
+              </span>{" "}
+              {loadError}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => void load()}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : updates === null ? (
           <div className="space-y-2">
             {Array.from({ length: 2 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full" />
