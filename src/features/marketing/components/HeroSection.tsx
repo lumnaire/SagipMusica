@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SmoothScrollHero from "@/components/ui/smooth-scroll-hero";
+import { HeroStats } from "./HeroStats";
 import heroImage from "@/assets/hero-img.avif";
 import heroImageMobile from "@/assets/hero-img-responsive-mobile.jpg";
 
@@ -44,6 +45,10 @@ export function HeroSection() {
         initialClipPercentage={isNarrow ? 5 : 14}
         finalClipPercentage={isNarrow ? 95 : 86}
       />
+
+      {/* The counters take the same scroll height, so they arrive exactly as
+          the frame finishes opening rather than at a guessed offset. */}
+      <HeroStats scrollHeight={SCROLL_HEIGHT} />
 
       <motion.div
         style={reduceMotion ? undefined : { opacity, y }}
