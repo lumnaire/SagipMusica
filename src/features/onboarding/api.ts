@@ -3,6 +3,7 @@ import type { Church, ReferralSource } from "@/types/database";
 
 export async function createChurchAndClaim(
   name: string,
+  location: string,
   referralSource: ReferralSource,
 ): Promise<Church> {
   // Re-validate the session against the server rather than trusting a
@@ -16,7 +17,7 @@ export async function createChurchAndClaim(
   // is what stops an account claiming another church or promoting itself.
   const { data: church, error: churchError } = await supabase
     .from("churches")
-    .insert({ name, referral_source: referralSource })
+    .insert({ name, location, referral_source: referralSource })
     .select()
     .single();
   if (churchError) throw churchError;

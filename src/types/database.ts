@@ -30,6 +30,8 @@ export type ReferralSource =
 export interface Church {
   id: string;
   name: string;
+  /** Free text -- a city, province or country. Null on churches created before onboarding asked. */
+  location: string | null;
   referral_source: ReferralSource | null;
   accent_color: string;
   created_by: string | null;

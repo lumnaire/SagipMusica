@@ -25,8 +25,9 @@ export function OnboardingPage() {
   const { session, profile, refreshProfile, signOut } = useAuthStore();
   const loadChurch = useChurchStore((s) => s.loadChurch);
   const navigate = useNavigate();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [churchName, setChurchName] = useState("");
+  const [churchLocation, setChurchLocation] = useState("");
   const [referralSource, setReferralSource] = useState<ReferralSource | "">("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,18 +42,29 @@ export function OnboardingPage() {
     setStep(2);
   }
 
+  function handleStep2(e: FormEvent) {
+    e.preventDefault();
+    // Matches the check constraint on churches.location (0015).
+    if (churchLocation.trim().length < 2) return;
+    setStep(3);
+  }
+
   async function handleSignOut() {
     await signOut();
     navigate("/");
   }
 
-  async function handleStep2(e: FormEvent) {
+  async function handleStep3(e: FormEvent) {
     e.preventDefault();
     if (!referralSource || !session) return;
     setSubmitting(true);
     setError(null);
     try {
-      const church = await createChurchAndClaim(churchName.trim(), referralSource);
+      const church = await createChurchAndClaim(
+        churchName.trim(),
+        churchLocation.trim(),
+        referralSource,
+      );
       await refreshProfile();
       await loadChurch(church.id);
     } catch (err) {
@@ -72,8 +84,8 @@ export function OnboardingPage() {
       <div className="relative w-full max-w-md">
         <div className="mb-7 flex flex-col items-center gap-3 text-center">
           <img src={sagipmusicaLogo} alt="SagipMusica" className="h-14 w-14 object-contain" />
-          <div className="flex items-center gap-2" aria-label={`Step ${step} of 2`}>
-            {[1, 2].map((n) => (
+          <div className="flex items-center gap-2" aria-label={`Step ${step} of 3`}>
+            {[1, 2, 3].map((n) => (
               <span
                 key={n}
                 className={cn(
@@ -83,7 +95,7 @@ export function OnboardingPage() {
               />
             ))}
           </div>
-          <p className="eyebrow">Step {step} of 2</p>
+          <p className="eyebrow">Step {step} of 3</p>
         </div>
 
         {step === 1 ? (
@@ -115,6 +127,51 @@ export function OnboardingPage() {
               </form>
             </CardContent>
           </Card>
+        ) : step === 2 ? (
+          <Card className="border-border/70 bg-card/90 shadow-xl backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="font-display text-2xl">
+                Where is your church located?
+              </CardTitle>
+              <CardDescription>
+                A city, province or country is plenty.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="flex flex-col gap-4" onSubmit={handleStep2}>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="church-location">Location</Label>
+                  <Input
+                    id="church-location"
+                    required
+                    autoFocus
+                    maxLength={160}
+                    autoComplete="address-level2"
+                    value={churchLocation}
+                    onChange={(e) => setChurchLocation(e.target.value)}
+                    placeholder="e.g. Cebu City, Philippines"
+                  />
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setStep(1)}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={churchLocation.trim().length < 2}
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         ) : (
           <Card className="border-border/70 bg-card/90 shadow-xl backdrop-blur-sm">
             <CardHeader>
@@ -124,7 +181,7 @@ export function OnboardingPage() {
               <CardDescription>This helps us know where to focus.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="flex flex-col gap-4" onSubmit={handleStep2}>
+              <form className="flex flex-col gap-4" onSubmit={handleStep3}>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="referral-source">Referral source</Label>
                   <Select
@@ -154,7 +211,7 @@ export function OnboardingPage() {
                     variant="outline"
                     className="flex-1"
                     disabled={submitting}
-                    onClick={() => setStep(1)}
+                    onClick={() => setStep(2)}
                   >
                     Back
                   </Button>
