@@ -110,17 +110,43 @@ describe("auth store", () => {
     expect(useAuthStore.getState().profile?.role).toBe("superadmin");
   });
 
-  it("signs out when the account itself is gone", async () => {
+  it("never destroys the session over an empty profile read", async () => {
     getSession.mockResolvedValue({ data: { session: session("user-1") } });
-    // No error, no row: the account was deleted while the browser still held
-    // a valid session.
-    profileResults = [{ data: null, error: null }];
+    // No error and no row. This is what a deleted account returns -- and also
+    // what a request that reached PostgREST without a usable token returns,
+    // because profiles_select_own_church is scoped `to authenticated` and an
+    // unauthenticated request matches no policy at all. The two are
+    // indistinguishable here, which is exactly why signing out on the guess
+    // used to end a working Google sign-in.
+    profileResults = [
+      { data: null, error: null },
+      { data: null, error: null },
+      { data: null, error: null },
+    ];
 
     const useAuthStore = await freshStore();
     await useAuthStore.getState().initialize();
 
-    expect(signOut).toHaveBeenCalled();
+    expect(signOut).not.toHaveBeenCalled();
     expect(useAuthStore.getState().status).toBe("unauthenticated");
+    expect(useAuthStore.getState().error).toMatch(/couldn't load your account/i);
+  });
+
+  it("recovers when a later attempt sees the row", async () => {
+    getSession.mockResolvedValue({ data: { session: session("user-1") } });
+    // The shape of the OAuth race: the first read lands before the token is
+    // usable and comes back empty, the retry sees the row.
+    profileResults = [
+      { data: null, error: null },
+      { data: PROFILE, error: null },
+    ];
+
+    const useAuthStore = await freshStore();
+    await useAuthStore.getState().initialize();
+
+    expect(signOut).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().status).toBe("authenticated");
+    expect(useAuthStore.getState().profile?.role).toBe("superadmin");
   });
 
   it("does not re-read the profile when only the token changed", async () => {

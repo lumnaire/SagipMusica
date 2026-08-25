@@ -36,8 +36,7 @@ interface AuthState {
  */
 type ProfileResult =
   | { kind: "ok"; profile: Profile }
-  | { kind: "missing" }
-  | { kind: "error"; message: string };
+  | { kind: "unreadable"; message: string };
 
 const RETRY_DELAYS_MS = [250, 600];
 
@@ -46,13 +45,28 @@ function delay(ms: number) {
 }
 
 /**
- * Reads the signed-in user's profile, retrying a couple of times before giving
- * up. The retries are there because this one query gates the whole app: until
- * it resolves the user has no role, so every route guard treats them as a
- * stranger. A single dropped request should not cost somebody their session.
+ * Reads the signed-in user's profile, retrying before it gives up.
  *
- * `maybeSingle` rather than `single`: an absent row is an answer, not an error,
- * and `single` reports it the same way it reports a network failure.
+ * Note what is NOT here: a "the account no longer exists" outcome. It looks
+ * like it should be knowable -- the row is either there or it is not -- but
+ * from the client it is not, because of how the read is gated:
+ *
+ *     create policy "profiles_select_own_church" on profiles
+ *       for select to authenticated using (... or id = auth.uid());
+ *
+ * The policy is scoped `to authenticated`. A request that reaches PostgREST
+ * without a usable token matches no policy at all and comes back as an empty
+ * set with no error -- byte for byte what a deleted account returns. Anything
+ * built on top of that distinction is guessing, and the guess used to be
+ * "deleted", answered with signOut(). That is what threw away a working
+ * session mid sign-in and sent the next page load to the login screen.
+ *
+ * So an empty result is retried like any other failure, and if it never
+ * resolves the session is left alone for the next load to recover.
+ *
+ * The retries matter because this one query gates the whole app: until it
+ * answers, the user has no role and every route guard treats them as a
+ * stranger.
  */
 async function fetchProfile(userId: string): Promise<ProfileResult> {
   let message = "Could not reach the server.";
@@ -64,16 +78,23 @@ async function fetchProfile(userId: string): Promise<ProfileResult> {
       .eq("id", userId)
       .maybeSingle();
 
-    if (!error) {
-      return data ? { kind: "ok", profile: data as Profile } : { kind: "missing" };
+    if (!error && data) return { kind: "ok", profile: data as Profile };
+
+    if (error) {
+      message = error.message;
+      console.error(`Failed to load profile (attempt ${attempt + 1})`, error);
+    } else {
+      message = "The account could not be read.";
+      console.error(
+        `Profile read returned no rows (attempt ${attempt + 1}). Either the ` +
+          `request was unauthenticated or the profiles row is missing.`,
+      );
     }
 
-    message = error.message;
-    console.error(`Failed to load profile (attempt ${attempt + 1})`, error);
     if (attempt < RETRY_DELAYS_MS.length) await delay(RETRY_DELAYS_MS[attempt]);
   }
 
-  return { kind: "error", message };
+  return { kind: "unreadable", message };
 }
 
 /**
@@ -100,25 +121,24 @@ let initialized = false;
 let applyGeneration = 0;
 
 const PROFILE_UNAVAILABLE =
-  "We couldn't load your account just now. Please try signing in again.";
+  "We couldn't load your account just now. Please try again.";
 
 /**
  * Moves a Supabase session into the store, resolving the profile that goes
  * with it.
  *
- * The three failure paths are deliberately different:
+ * When the profile cannot be read, this reports the user as signed out **in
+ * this tab** and leaves the stored Supabase session untouched. It deliberately
+ * does not call signOut().
  *
- *   missing  The account is genuinely gone -- deleted from the dashboard while
- *            the browser still held a valid session. End the session; every
- *            other part of the app assumes an authenticated user has a profile.
- *
- *   error    We could not read it. Keep the stored Supabase session and report
- *            the user as signed out in this tab only, so a reload or a fresh
- *            sign-in recovers. Signing out here is what used to destroy a
- *            perfectly good session over one failed request, and it is why a
- *            refresh landed back on the login page.
- *
- *   ok       Normal.
+ * Destroying the session was the old behaviour, on the theory that a session
+ * outliving its account leaves the app in a state it cannot represent. The
+ * theory was fine; the evidence for it was not (see fetchProfile). And the two
+ * mistakes are not equally priced -- a stale session left in storage costs a
+ * trip through the login page, while a destroyed one costs the sign-in the
+ * user was in the middle of. Google sign-in made that expensive: the callback
+ * establishes the session and this runs immediately against it, so losing the
+ * race meant landing back on /login and starting over.
  */
 async function applySession(
   session: Session | null,
@@ -145,14 +165,10 @@ async function applySession(
   const result = await fetchProfile(session.user.id);
   if (superseded()) return;
 
-  if (result.kind === "missing") {
-    await supabase.auth.signOut();
-    if (superseded()) return;
-    set({ session: null, profile: null, status: "unauthenticated" });
-    return;
-  }
-
-  if (result.kind === "error") {
+  if (result.kind === "unreadable") {
+    // The stored session stays: a reload retries the read, and it usually
+    // succeeds. Signing out here would make the user repeat the whole OAuth
+    // round trip instead.
     set({
       session: null,
       profile: null,

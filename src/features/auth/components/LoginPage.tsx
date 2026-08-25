@@ -12,7 +12,7 @@ import { landingPathFor } from "@/lib/auth-routing";
 import { AuthLayout } from "./AuthLayout";
 
 export function LoginPage() {
-  const { status, profile, signIn, signInWithOAuth } = useAuthStore();
+  const { status, profile, signIn, signInWithOAuth, error: authError } = useAuthStore();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,6 +58,18 @@ export function LoginPage() {
           <CardDescription>Enter your credentials to continue.</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* An OAuth attempt that could not resolve the account comes back
+              here with an empty form, so this sits outside it -- otherwise the
+              bounce is silent and looks like the sign-in simply did nothing. */}
+          {authError && !formError && (
+            <p
+              className="mb-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              role="alert"
+            >
+              {authError}
+            </p>
+          )}
+
           <Button
             type="button"
             variant="outline"
