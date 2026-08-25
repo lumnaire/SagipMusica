@@ -155,7 +155,7 @@ export function MarketingFooter() {
         <div className="staff-rule mt-10 opacity-50 sm:mt-12" aria-hidden="true" />
 
         <p className="mt-5 text-[0.6875rem] text-muted-foreground sm:mt-6 sm:text-xs">
-          &copy; {new Date().getFullYear()} SagipMusica. Built by Lumnaire.
+          &copy; {new Date().getFullYear()} SagipMusica. Powered by Lumnaire
         </p>
       </div>
     </footer>

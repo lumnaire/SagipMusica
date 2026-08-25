@@ -9,7 +9,10 @@ import { MarketingFooter } from "./MarketingFooter";
 
 export function LandingPage() {
   return (
-    <div className="min-h-svh">
+    // data-landing-ready is the signal the first-visit intro waits on before
+    // it slides away (see /public/intro.js) -- without it the curtain can lift
+    // on the auth spinner or a still-empty root.
+    <div className="min-h-svh" data-landing-ready>
       <MarketingNav />
       <main>
         <HeroSection />

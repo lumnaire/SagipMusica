@@ -16,8 +16,466 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..800&family=Inter:wght@300..700&display=swap"
       rel="stylesheet"
     />
+    <link rel="preload" as="image" href="/sagipmusica-logo1.png" />
+
+    <!--
+      First-visit intro.
+      ------------------
+      Three pieces, and the split between them is deliberate:
+
+        * These styles are inline because the panel has to be correct in the
+          very first painted frame. An external stylesheet is one round trip
+          too slow, and a frame of unstyled markup is exactly the flash of
+          landing page this is meant to prevent. (`style-src` allows inline;
+          `script-src` does not, which is why the logic sits in /intro.js.)
+
+        * The markup is first in <body> so it is parsed before anything else.
+
+        * Everything defaults to `display: none`. /intro.js opts in by setting
+          data-sm-intro on <html> while <head> is still parsing. So the intro
+          only ever appears when the script that knows how to remove it is
+          running -- if the file fails to load, the site is simply normal.
+
+      The motion: everything rises out of a mask, bottom to top, on an expo
+      curve (cubic-bezier(.16,1,.3,1)) -- fast out of the gate, long settle.
+      The exit inverts it. The panel slides up on cubic-bezier(.86,0,.1,1),
+      and its bottom edge is not straight: a half-ellipse tucked under it
+      swells and flattens as it goes, so the trailing edge curves through the
+      reveal like a sheet being drawn off rather than a box sliding away.
+    -->
+    <style>
+      #sm-intro {
+        display: none;
+      }
+
+      html[data-sm-intro] #sm-intro {
+        display: block;
+      }
+      /* Locked only while the intro holds; released the instant it starts to
+         leave, so the scrollbar returns behind a panel that still covers the
+         viewport instead of mid-reveal. */
+      html[data-sm-intro="run"],
+      html[data-sm-intro="run"] body {
+        overflow: hidden;
+      }
+
+      #sm-intro {
+        --sm-ink: #090a13;
+        --sm-fg: #f6f2e9;
+        --sm-gold: #e2b872;
+        --sm-indigo: #6f63e0;
+
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        background: var(--sm-ink);
+        color: var(--sm-fg);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        cursor: pointer;
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
+        transition: transform 1.05s cubic-bezier(0.86, 0, 0.1, 1) 0.14s;
+      }
+      #sm-intro.is-out {
+        transform: translate3d(0, -101%, 0);
+      }
+
+      /* The curved trailing edge. A half-ellipse parked just under the panel,
+         scaled from a flat line out to a full dome and back to nothing across
+         the slide -- the middle of the edge lags the sides, then catches up. */
+      .sm-intro__curve {
+        position: absolute;
+        top: calc(100% - 1px);
+        left: -6vw;
+        width: 112vw;
+        height: 17vh;
+        background: var(--sm-ink);
+        border-radius: 0 0 50% 50% / 0 0 100% 100%;
+        transform: scaleY(0);
+        transform-origin: 50% 0;
+        will-change: transform;
+        box-shadow:
+          0 1px 0 0 rgba(226, 184, 114, 0.45),
+          0 20px 70px -14px rgba(111, 99, 224, 0.5);
+      }
+      #sm-intro.is-out .sm-intro__curve {
+        animation: sm-curve 1.05s cubic-bezier(0.86, 0, 0.1, 1) 0.14s both;
+      }
+      @keyframes sm-curve {
+        0% {
+          transform: scaleY(0);
+        }
+        42% {
+          transform: scaleY(1);
+        }
+        100% {
+          transform: scaleY(0);
+        }
+      }
+
+      /* ---- Backdrop ---- */
+
+      .sm-intro__aura,
+      .sm-intro__grain,
+      .sm-intro__vignette {
+        position: absolute;
+        pointer-events: none;
+      }
+      .sm-intro__aura {
+        inset: -25%;
+        opacity: 0;
+        background:
+          radial-gradient(34% 42% at 50% 40%, rgba(111, 99, 224, 0.32), transparent 70%),
+          radial-gradient(26% 32% at 66% 74%, rgba(226, 184, 114, 0.16), transparent 72%);
+      }
+      #sm-intro.is-in .sm-intro__aura {
+        animation:
+          sm-fade 1.8s ease-out 0.05s both,
+          sm-drift 16s ease-in-out 0.05s infinite alternate;
+      }
+      .sm-intro__vignette {
+        inset: 0;
+        background: radial-gradient(115% 115% at 50% 45%, transparent 38%, rgba(0, 0, 0, 0.62) 100%);
+      }
+      .sm-intro__grain {
+        inset: -120px;
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      #sm-intro.is-in .sm-intro__grain {
+        animation: sm-grain 0.7s steps(1) infinite;
+      }
+      @keyframes sm-drift {
+        from {
+          transform: translate3d(-2%, 1%, 0) scale(1.02);
+        }
+        to {
+          transform: translate3d(3%, -2%, 0) scale(1.09);
+        }
+      }
+      @keyframes sm-grain {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        20% {
+          transform: translate3d(-9px, 5px, 0);
+        }
+        40% {
+          transform: translate3d(7px, -7px, 0);
+        }
+        60% {
+          transform: translate3d(-5px, -9px, 0);
+        }
+        80% {
+          transform: translate3d(9px, 6px, 0);
+        }
+      }
+
+      /* ---- Stage ---- */
+
+      .sm-intro__stage {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 7vmin 6vw;
+      }
+      .sm-intro__inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      /* The content leaves a beat before the panel and travels further, so the
+         two do not read as one flat sheet. */
+      #sm-intro.is-out .sm-intro__inner {
+        transform: translate3d(0, -54px, 0);
+        opacity: 0;
+        filter: blur(6px);
+        transition:
+          transform 0.8s cubic-bezier(0.7, 0, 0.18, 1),
+          opacity 0.5s ease-out,
+          filter 0.5s ease-out;
+      }
+
+      /* The logo art is mid-blue on transparent, so it needs a lit plate to
+         hold its own against the ink. */
+      .sm-intro__plate {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: clamp(76px, 11.5vmin, 108px);
+        aspect-ratio: 1;
+        border-radius: 28%;
+        background: linear-gradient(160deg, #fffdf7, #efe7d9);
+        box-shadow:
+          0 0 0 1px rgba(226, 184, 114, 0.28),
+          0 34px 70px -24px rgba(0, 0, 0, 0.9),
+          0 0 90px -10px rgba(111, 99, 224, 0.45);
+        opacity: 0;
+        transform: scale(1.16) translate3d(0, 12px, 0);
+        filter: blur(14px);
+      }
+      #sm-intro.is-in .sm-intro__plate {
+        animation: sm-plate 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+      }
+      @keyframes sm-plate {
+        to {
+          opacity: 1;
+          transform: none;
+          filter: blur(0);
+        }
+      }
+      .sm-intro__mark {
+        width: 62%;
+        height: 62%;
+        object-fit: contain;
+      }
+
+      /* ---- Wordmark: one mask per letter, filled by /intro.js ---- */
+
+      .sm-intro__word {
+        /* Hidden until the timeline starts. The markup ships the name as plain
+           text -- /intro.js only splits it into per-letter masks at
+           DOMContentLoaded -- so without this it paints in full for a frame or
+           two and then blinks out as the masks take over. */
+        opacity: 0;
+        margin: clamp(20px, 3.4vmin, 34px) 0 0;
+        font-family: Fraunces, ui-serif, Georgia, serif;
+        font-optical-sizing: auto;
+        font-weight: 500;
+        font-size: clamp(2.4rem, 8.4vw, 5rem);
+        line-height: 1;
+        letter-spacing: -0.022em;
+      }
+      .sm-ch {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: bottom;
+        /* Room for the descender on the g, which the mask would clip. */
+        padding-bottom: 0.16em;
+        margin-bottom: -0.16em;
+      }
+      .sm-ch > i {
+        display: inline-block;
+        font-style: normal;
+        opacity: 0;
+        /* The tilt is what makes each letter arc up into place instead of
+           travelling in a straight line. */
+        transform: translate3d(0, 118%, 0) rotate(4deg);
+      }
+      #sm-intro.is-in .sm-intro__word {
+        opacity: 1;
+      }
+      #sm-intro.is-in .sm-ch > i {
+        animation: sm-rise 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: calc(0.42s + var(--i) * 0.045s);
+      }
+      @keyframes sm-rise {
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .sm-intro__rule {
+        width: min(230px, 44vw);
+        height: 1px;
+        margin: clamp(16px, 2.6vmin, 26px) 0;
+        background: linear-gradient(90deg, transparent, var(--sm-gold), transparent);
+        transform: scaleX(0);
+      }
+      #sm-intro.is-in .sm-intro__rule {
+        animation: sm-rule 0.95s cubic-bezier(0.16, 1, 0.3, 1) 1.18s both;
+      }
+      @keyframes sm-rule {
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      .sm-intro__by,
+      .sm-intro__name {
+        margin: 0;
+        text-transform: uppercase;
+      }
+      .sm-intro__by {
+        font-size: clamp(0.56rem, 1.5vw, 0.66rem);
+        font-weight: 400;
+        letter-spacing: 0.42em;
+        margin-right: -0.42em;
+        color: rgba(246, 242, 233, 0.42);
+      }
+      .sm-intro__name {
+        margin-top: 0.85em;
+        font-size: clamp(0.72rem, 2.1vw, 0.92rem);
+        font-weight: 500;
+        letter-spacing: 0.26em;
+        margin-right: -0.26em;
+        color: var(--sm-fg);
+      }
+      .sm-line {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: bottom;
+        padding-bottom: 0.3em;
+        margin-bottom: -0.3em;
+      }
+      .sm-line > i {
+        display: inline-block;
+        font-style: normal;
+        opacity: 0;
+        transform: translate3d(0, 130%, 0);
+      }
+      #sm-intro.is-in .sm-intro__by .sm-line > i {
+        animation: sm-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.3s both;
+      }
+      /* The name settles by tightening its tracking as it rises. */
+      #sm-intro.is-in .sm-intro__name .sm-line > i {
+        animation: sm-name 1s cubic-bezier(0.16, 1, 0.3, 1) 1.44s both;
+      }
+      @keyframes sm-name {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 130%, 0);
+          letter-spacing: 0.62em;
+        }
+        to {
+          opacity: 1;
+          transform: none;
+          letter-spacing: 0.26em;
+        }
+      }
+
+      /* ---- Chrome ---- */
+
+      .sm-intro__skip {
+        position: absolute;
+        right: clamp(16px, 4vw, 44px);
+        bottom: clamp(20px, 4vh, 42px);
+        padding: 6px 2px;
+        border: 0;
+        background: none;
+        color: rgba(246, 242, 233, 0.45);
+        font: inherit;
+        font-size: 0.6rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        cursor: pointer;
+        opacity: 0;
+        transition: color 0.35s ease;
+      }
+      #sm-intro.is-in .sm-intro__skip {
+        animation: sm-fade 0.8s ease-out 2s both;
+      }
+      .sm-intro__skip::after {
+        content: "";
+        display: block;
+        height: 1px;
+        margin-top: 6px;
+        background: currentColor;
+        transform: scaleX(0.35);
+        transform-origin: 0 50%;
+        transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .sm-intro__skip:hover,
+      .sm-intro__skip:focus-visible {
+        color: var(--sm-gold);
+      }
+      .sm-intro__skip:hover::after,
+      .sm-intro__skip:focus-visible::after {
+        transform: scaleX(1);
+      }
+
+      .sm-intro__bar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: rgba(246, 242, 233, 0.09);
+      }
+      .sm-intro__bar > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--sm-indigo), var(--sm-gold));
+        transform: scaleX(0);
+        transform-origin: 0 50%;
+      }
+      #sm-intro.is-in .sm-intro__bar > span {
+        animation: sm-bar 2.95s cubic-bezier(0.33, 0, 0.15, 1) both;
+      }
+      /* Skipped early: run it home rather than leave it stranded part-way. */
+      #sm-intro.is-out .sm-intro__bar > span {
+        animation: none;
+        transform: scaleX(1);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes sm-bar {
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes sm-fade {
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Reduced motion: the same title, held and then faded. No travel, no
+         curve, no grain -- and roughly half the wait. */
+      #sm-intro.is-reduced .sm-intro__grain,
+      #sm-intro.is-reduced .sm-intro__bar,
+      #sm-intro.is-reduced .sm-intro__curve {
+        display: none;
+      }
+      #sm-intro.is-reduced *,
+      #sm-intro.is-reduced *::before,
+      #sm-intro.is-reduced *::after {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+        filter: none !important;
+        opacity: 1 !important;
+      }
+      #sm-intro.is-reduced {
+        transition: opacity 0.55s linear;
+      }
+      #sm-intro.is-reduced.is-out {
+        transform: none;
+        opacity: 0;
+      }
+    </style>
+
+    <!-- Render-blocking on purpose: it must decide, and un-hide the panel,
+         before the browser paints its first frame. -->
+    <script src="/intro.js?v=1"></script>
   </head>
   <body>
+    <div id="sm-intro" role="dialog" aria-modal="true" aria-label="SagipMusica">
+      <div class="sm-intro__aura"></div>
+      <div class="sm-intro__vignette"></div>
+      <div class="sm-intro__grain"></div>
+
+      <div class="sm-intro__stage">
+        <div class="sm-intro__inner">
+          <div class="sm-intro__plate">
+            <img class="sm-intro__mark" src="/sagipmusica-logo1.png" alt="" width="376" height="441" />
+          </div>
+          <div class="sm-intro__word" data-sm-split>SagipMusica</div>
+          <div class="sm-intro__rule"></div>
+          <p class="sm-intro__by"><span class="sm-line"><i>Developed by</i></span></p>
+          <p class="sm-intro__name"><span class="sm-line"><i>Ronald Castromero</i></span></p>
+        </div>
+      </div>
+
+      <button class="sm-intro__skip" type="button">Skip</button>
+      <div class="sm-intro__bar"><span></span></div>
+      <div class="sm-intro__curve"></div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
