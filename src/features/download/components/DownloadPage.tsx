@@ -20,6 +20,7 @@ import { MarketingNav } from "@/features/marketing/components/MarketingNav";
 import { MarketingFooter } from "@/features/marketing/components/MarketingFooter";
 import { SupportDialog } from "@/features/marketing/components/SupportDialog";
 import { DownloadDialog } from "./DownloadDialog";
+import { UpcomingUpdates } from "./UpcomingUpdates";
 import {
   DESKTOP_RELEASED,
   DESKTOP_SIZE,
@@ -192,6 +193,9 @@ export function DownloadPage() {
           </Reveal>
         </div>
       </section>
+
+      {/* ── What's coming next ───────────────────────────────────────── */}
+      <UpcomingUpdates />
 
       {/* ── What you get ─────────────────────────────────────────────── */}
       <section className="bg-background py-24 sm:py-28">

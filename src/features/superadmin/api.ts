@@ -7,6 +7,8 @@ export interface PlatformStats {
   total_songs: number;
   total_worship_sets: number;
   total_library_songs: number;
+  /** Rows in download_signups -- installers handed out, not distinct churches. */
+  total_desktop_downloads: number;
 }
 
 /** The only transitions superadmin_set_role accepts. */

@@ -1,5 +1,11 @@
 import { Reveal } from "@/components/ui/reveal";
+import { FBC_FACEBOOK_URL, LUMNAIRE_FACEBOOK_URL } from "@/lib/links";
 import lumnaireLogo from "@/assets/lumnaire_logo.png";
+
+/** Underlined on hover only, so the credit line stays a sentence rather than
+    turning into a row of links. */
+const CREDIT_LINK_CLASS =
+  "font-medium text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline";
 
 export function AboutSection() {
   return (
@@ -36,7 +42,24 @@ export function AboutSection() {
               <img src={lumnaireLogo} alt="" className="h-6 w-6 rounded-sm" />
               <p className="text-sm text-muted-foreground">
                 Built by <span className="font-medium text-foreground">Ronald Castromero</span>{" "}
-                from Fundamental Baptist Church, founder of Lumnaire
+                from{" "}
+                <a
+                  href={FBC_FACEBOOK_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={CREDIT_LINK_CLASS}
+                >
+                  Fundamental Baptist Church
+                </a>
+                , founder of{" "}
+                <a
+                  href={LUMNAIRE_FACEBOOK_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={CREDIT_LINK_CLASS}
+                >
+                  Lumnaire
+                </a>
               </p>
             </div>
           </div>

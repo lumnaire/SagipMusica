@@ -14,6 +14,21 @@ class ResizeObserverStub {
 }
 globalThis.ResizeObserver = ResizeObserverStub;
 
+// Nor IntersectionObserver, which framer-motion's whileInView needs -- every
+// marketing section is wrapped in <Reveal>, so without this they throw on
+// mount. A no-op is enough: the children are in the DOM either way, and only
+// the fade-in depends on the observer firing.
+class IntersectionObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+// @ts-expect-error -- test polyfill
+globalThis.IntersectionObserver = IntersectionObserverStub;
+
 // jsdom doesn't implement BroadcastChannel either.
 class BroadcastChannelStub {
   name: string;

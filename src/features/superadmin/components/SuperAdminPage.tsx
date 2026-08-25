@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Library,
   UserCog,
+  MonitorDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PaginationFooter } from "@/components/ui/pagination";
+import { usePagination } from "@/hooks/usePagination";
 import {
   Table,
   TableBody,
@@ -49,7 +52,11 @@ import {
   type PlatformAccount,
   type PlatformStats,
 } from "@/features/superadmin/api";
+import { UpdatesBoardCard } from "./UpdatesBoardCard";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
+
+/** Ten rows is about a screen, which is the whole point of paging this. */
+const PAGE_SIZE = 10;
 
 export function SuperAdminPage() {
   const { profile, signOut } = useAuthStore();
@@ -148,6 +155,16 @@ export function SuperAdminPage() {
     );
   });
 
+  // Paged rather than scrolled: the table is six columns wide and every row
+  // carries actions, so a few hundred accounts turned this page into a mile of
+  // scrolling with the search box left far above. Resets to page one whenever
+  // the search changes, so a stale page number never shows an empty table.
+  const { visible, page, pageCount, setPage } = usePagination(
+    filtered,
+    PAGE_SIZE,
+    search,
+  );
+
   return (
     <div className="min-h-svh bg-muted/30">
       <header className="border-b border-border bg-background">
@@ -180,9 +197,17 @@ export function SuperAdminPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-6">
+        {/* Seven cards, so they sit four-then-three rather than being squeezed
+            into one row that makes every label wrap. */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           <StatCard icon={Users} label="Accounts" value={stats?.total_accounts} loading={loading} />
           <StatCard icon={Church} label="Churches" value={stats?.total_churches} loading={loading} />
+          <StatCard
+            icon={MonitorDown}
+            label="Desktop downloads"
+            value={stats?.total_desktop_downloads}
+            loading={loading}
+          />
           <StatCard icon={Music2} label="Songs" value={stats?.total_songs} loading={loading} />
           <StatCard
             icon={ListMusic}
@@ -262,7 +287,7 @@ export function SuperAdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((account) => {
+                  {visible.map((account) => {
                     const isSelf = account.id === profile?.id;
                     const isSuper = account.role === "superadmin";
                     const isEncoder = account.role === "encoder";
@@ -352,12 +377,18 @@ export function SuperAdminPage() {
           )}
 
           {!loading && filtered.length > 0 && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Showing {filtered.length} of {accounts.length} account
-              {accounts.length === 1 ? "" : "s"}
-            </p>
+            <PaginationFooter
+              page={page}
+              pageCount={pageCount}
+              pageSize={PAGE_SIZE}
+              total={filtered.length}
+              onPageChange={setPage}
+              noun="account"
+            />
           )}
         </section>
+
+        <UpdatesBoardCard />
       </main>
 
       <AlertDialog

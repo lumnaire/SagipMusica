@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
+import { LUMNAIRE_FACEBOOK_URL } from "@/lib/links";
 import lumnaireLogo from "@/assets/lumnaire_logo.png";
 import show1 from "@/assets/show1.jpg";
 import show2 from "@/assets/show2.jpg";
@@ -47,10 +48,15 @@ function BackgroundCarousel() {
 function PoweredByLumnaire() {
   return (
     <div className="absolute inset-x-0 bottom-5 flex justify-center">
-      <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3.5 py-1.5 backdrop-blur-sm">
-        <img src={lumnaireLogo} alt="Lumnaire" className="h-4 w-4 rounded-sm" />
+      <a
+        href={LUMNAIRE_FACEBOOK_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3.5 py-1.5 backdrop-blur-sm transition-colors hover:border-white/30 hover:bg-black/45"
+      >
+        <img src={lumnaireLogo} alt="" className="h-4 w-4 rounded-sm" />
         <span className="text-xs font-medium text-white/70">Powered by Lumnaire</span>
-      </div>
+      </a>
     </div>
   );
 }

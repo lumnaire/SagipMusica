@@ -199,20 +199,14 @@
           filter 0.5s ease-out;
       }
 
-      /* The logo art is mid-blue on transparent, so it needs a lit plate to
-         hold its own against the ink. */
+      /* The mark sits bare on the ink -- no plate behind it. Its art is
+         mid-blue on transparent, which would sink into a near-black field, so
+         the contrast comes from drop-shadows tracing the silhouette instead of
+         from a panel behind it. The blur/scale entrance lives on the wrapper
+         so it cannot fight the glow filter on the image itself. */
       .sm-intro__plate {
-        position: relative;
         display: grid;
         place-items: center;
-        width: clamp(76px, 11.5vmin, 108px);
-        aspect-ratio: 1;
-        border-radius: 28%;
-        background: linear-gradient(160deg, #fffdf7, #efe7d9);
-        box-shadow:
-          0 0 0 1px rgba(226, 184, 114, 0.28),
-          0 34px 70px -24px rgba(0, 0, 0, 0.9),
-          0 0 90px -10px rgba(111, 99, 224, 0.45);
         opacity: 0;
         transform: scale(1.16) translate3d(0, 12px, 0);
         filter: blur(14px);
@@ -228,9 +222,12 @@
         }
       }
       .sm-intro__mark {
-        width: 62%;
-        height: 62%;
+        width: clamp(84px, 13vmin, 122px);
+        height: auto;
         object-fit: contain;
+        filter:
+          drop-shadow(0 0 26px rgba(140, 190, 255, 0.35))
+          drop-shadow(0 0 70px rgba(111, 99, 224, 0.55));
       }
 
       /* ---- Wordmark: one mask per letter, filled by /intro.js ---- */

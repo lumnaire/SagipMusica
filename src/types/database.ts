@@ -39,6 +39,20 @@ export interface Church {
   updated_at: string;
 }
 
+/**
+ * One line on the "what's coming" board shown on the download page. Written by
+ * the superadmin; only the published ones are visible to the public.
+ */
+export interface PlatformUpdate {
+  id: string;
+  title: string;
+  detail: string | null;
+  is_published: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Profile {
   id: string;
   church_id: string | null;

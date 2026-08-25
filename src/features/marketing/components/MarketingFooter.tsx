@@ -5,12 +5,13 @@ import {
   XIcon,
 } from "@/components/icons/social-icons";
 import { useConsentStore } from "@/stores/consent-store";
+import { LUMNAIRE_FACEBOOK_URL } from "@/lib/links";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 const SOCIALS = [
   {
     name: "Facebook",
-    href: "https://www.facebook.com/lumnaireph",
+    href: LUMNAIRE_FACEBOOK_URL,
     Icon: FacebookIcon,
   },
   { name: "X", href: "https://x.com/Lumnaire_coding", Icon: XIcon },
@@ -32,7 +33,7 @@ export function MarketingFooter() {
     <footer className="border-t border-border bg-background py-10 sm:py-14">
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="flex flex-col gap-9 md:flex-row md:justify-between md:gap-8 lg:gap-10">
-          <div className="md:max-w-[14rem] lg:max-w-xs">
+          <div className="md:max-w-56 lg:max-w-xs">
             <Link to="/" className="flex items-center gap-2.5">
               <img
                 src={sagipmusicaLogo}
@@ -155,7 +156,15 @@ export function MarketingFooter() {
         <div className="staff-rule mt-10 opacity-50 sm:mt-12" aria-hidden="true" />
 
         <p className="mt-5 text-[0.6875rem] text-muted-foreground sm:mt-6 sm:text-xs">
-          &copy; {new Date().getFullYear()} SagipMusica. Powered by Lumnaire
+          &copy; {new Date().getFullYear()} SagipMusica. Powered by{" "}
+          <a
+            href={LUMNAIRE_FACEBOOK_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            Lumnaire
+          </a>
         </p>
       </div>
     </footer>
