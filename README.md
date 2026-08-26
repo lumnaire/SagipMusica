@@ -140,6 +140,8 @@ src/
   features/
     auth/               login, signup, route protection
     onboarding/         church creation + spotlight tour trigger
+    map/                the pin map: gazetteer-backed API, the projection, and
+                          the generated SVG world it is drawn on
     marketing/           landing page, nav, footer
     dashboard/          dashboard + settings pages
     download/           desktop download page + the pre-download survey
@@ -158,6 +160,9 @@ supabase/
   seed.sql              notes on why there's no global seed data anymore
 scripts/
   generate-hymnal-migration.mjs   regenerates 0013 from the FBC hymnal JSON
+  generate-world-map.mjs          regenerates the SVG world + country gazetteer
+  inline-country-places.mjs       pastes that gazetteer into 0018
+  check-map-migration.mjs         runs 0018 against a throwaway Postgres
 docs/
   hymnal-copyright-review.md      which imported hymns ship without lyrics, and why
 ```
@@ -182,6 +187,35 @@ rather than hand-editing the SQL. 21 hymns whose words are still under copyright
 imported as metadata only, with no lyrics; see
 [docs/hymnal-copyright-review.md](docs/hymnal-copyright-review.md), which also lists
 the titles that still need a human check.
+
+## The pin map
+
+The landing page closes on a live map of where SagipMusica is being used. There
+is no data entry behind it: it reads the location answers the product already
+collects — onboarding step 2 (`churches.location`) and the desktop download
+survey (`download_signups.church_location`) — so a church that finishes
+onboarding is on the map on the next load, and so is every desktop install.
+
+Free text becomes a point through a **gazetteer**, not a geocoding API.
+`0018_map_pins.sql` ships every country plus every Philippine province, and
+`match_map_place()` resolves an answer against their names and aliases. It reads
+"Cebu City, Philippines", "Quezon City", "Cagayan de Oro" and "Gensan" correctly,
+and it deliberately cannot place a barangay — the pin says "a church in Cebu",
+which is as precise as the answers are and as much as should be published.
+Counts are derived by query rather than stored, so duplicate spellings collapse
+onto one pin by construction and nothing can drift out of step.
+
+The superadmin dashboard has the other half: a review table showing what people
+typed next to what it was read as, with the ability to reassign a misread
+answer, keep one off the map, hide a pin, or drop a new one anywhere by clicking
+the map.
+
+The world itself is **generated** — `npm run map:generate` rebuilds
+`src/features/map/world-geometry.ts` and the country rows in 0018 from Natural
+Earth. It is a self-contained SVG rather than a tile layer because `vercel.json`
+restricts `img-src` to `'self'`, and a basemap is not worth widening the CSP
+for. `npm run map:check` applies 0018 to an in-process Postgres and asserts the
+matcher against ~60 real spellings.
 
 ## Roles
 

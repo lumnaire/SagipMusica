@@ -23,3 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated intermediates from scripts/ (the finished output is committed:
+# world-geometry.ts and the seed block inside 0018_map_pins.sql).
+scripts/out

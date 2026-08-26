@@ -54,6 +54,7 @@ import {
   type PlatformStats,
 } from "@/features/superadmin/api";
 import { UpdatesBoardCard } from "./UpdatesBoardCard";
+import { MapPinsCard } from "./MapPinsCard";
 import sagipmusicaLogo from "@/assets/sagipmusica-logo1.png";
 
 /** Ten rows is about a screen, which is the whole point of paging this. */
@@ -420,6 +421,8 @@ export function SuperAdminPage() {
             />
           )}
         </section>
+
+        <MapPinsCard />
 
         <UpdatesBoardCard />
       </main>
