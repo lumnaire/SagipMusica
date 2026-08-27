@@ -27,9 +27,7 @@ export function SupportDialog() {
             Thank you for giving
           </DialogTitle>
           <DialogDescription>
-            Scan the code or tap the button below to give through Buy Me a
-            Coffee. Any amount helps cover hosting and keeps SagipMusica free
-            for churches.
+            Scan the code or tap the button below to support SagipMusica. Any amount helps cover hosting, maintenance, and development while keeping SagipMusica free for churches.
           </DialogDescription>
         </DialogHeader>
 
@@ -49,7 +47,7 @@ export function SupportDialog() {
 
         <Button asChild className="w-full">
           <a href={BUY_ME_A_COFFEE_URL} target="_blank" rel="noreferrer">
-            Donate on Buy Me a Coffee
+            Donate ❤️
           </a>
         </Button>
 
