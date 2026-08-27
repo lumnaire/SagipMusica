@@ -7,9 +7,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import qrCode from "@/assets/qrcode.jpg";
+import qrCode from "@/assets/qr-code-buymeacoffee.png";
 
 const FACEBOOK_URL = "https://www.facebook.com/lumnaireph";
+const BUY_ME_A_COFFEE_URL = "https://buymeacoffee.com/lumnaire";
 
 export function SupportDialog() {
   return (
@@ -26,8 +27,9 @@ export function SupportDialog() {
             Thank you for giving
           </DialogTitle>
           <DialogDescription>
-            Scan this InstaPay code with your bank or e-wallet app. Any amount
-            helps cover hosting and keeps SagipMusica free for churches.
+            Scan the code or tap the button below to give through Buy Me a
+            Coffee. Any amount helps cover hosting and keeps SagipMusica free
+            for churches.
           </DialogDescription>
         </DialogHeader>
 
@@ -35,14 +37,21 @@ export function SupportDialog() {
           <div className="overflow-hidden rounded-lg border border-border bg-white p-3">
             <img
               src={qrCode}
-              alt="InstaPay QR code for sending a gift to SagipMusica"
+              alt="Buy Me a Coffee QR code for sending a gift to SagipMusica"
               className="mx-auto h-auto w-full max-w-[260px]"
             />
           </div>
           <figcaption className="mt-3 text-center text-xs text-muted-foreground">
-            Works with any InstaPay-enabled bank or e-wallet in the Philippines.
+            Cards, GCash, Maya, and PayPal are accepted — in pesos or US
+            dollars.
           </figcaption>
         </figure>
+
+        <Button asChild className="w-full">
+          <a href={BUY_ME_A_COFFEE_URL} target="_blank" rel="noreferrer">
+            Donate on Buy Me a Coffee
+          </a>
+        </Button>
 
         <p className="text-center text-sm text-muted-foreground">
           Prefer to give another way?{" "}
