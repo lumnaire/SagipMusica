@@ -30,7 +30,7 @@ export function CookieBanner() {
         <div
           role="dialog"
           aria-label="Cookie preferences"
-          className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-card/95 p-3 shadow-2xl backdrop-blur-md sm:p-5"
+          className="fixed inset-x-0 bottom-0 z-60 border-t border-border bg-card/95 p-3 shadow-2xl backdrop-blur-md sm:p-5"
         >
           <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex gap-3">

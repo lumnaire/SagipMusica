@@ -36,7 +36,7 @@ export function SupportDialog() {
             <img
               src={qrCode}
               alt="Buy Me a Coffee QR code for sending a gift to SagipMusica"
-              className="mx-auto h-auto w-full max-w-[260px]"
+              className="mx-auto h-auto w-full max-w-65"
             />
           </div>
           <figcaption className="mt-3 text-center text-xs text-muted-foreground">

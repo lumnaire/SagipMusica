@@ -82,17 +82,17 @@ export function UsersMapSection() {
   // hand and re-checked against a screenshot. Countries, biggest first.
   const countries = pins
     ? [
-        ...pins
-          .reduce((acc, pin) => {
-            const total = pin.churches + pin.downloads;
-            acc.set(pin.country_name, (acc.get(pin.country_name) ?? 0) + total);
-            return acc;
-          }, new Map<string, number>())
-          .entries(),
-      ]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(([name]) => name)
+      ...pins
+        .reduce((acc, pin) => {
+          const total = pin.churches + pin.downloads;
+          acc.set(pin.country_name, (acc.get(pin.country_name) ?? 0) + total);
+          return acc;
+        }, new Map<string, number>())
+        .entries(),
+    ]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([name]) => name)
     : [];
 
   return (
@@ -132,7 +132,7 @@ export function UsersMapSection() {
               {/* Taller on a phone than the 16/10 it started at: at that ratio
                   the frame is barely 200px high, which left the pin cluster
                   and the zoom controls fighting over the same corner. */}
-              <div className="aspect-[5/4] w-full overflow-hidden rounded-lg sm:aspect-[16/9] sm:rounded-xl">
+              <div className="aspect-5/4 w-full overflow-hidden rounded-lg sm:aspect-video sm:rounded-xl">
                 {near && pins && pins.length > 0 ? (
                   <Suspense fallback={<MapSkeleton />}>
                     <WorldMap pins={pins} tone="night" className="h-full w-full" />
