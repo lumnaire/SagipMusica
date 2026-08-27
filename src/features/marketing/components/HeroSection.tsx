@@ -7,6 +7,7 @@ import SmoothScrollHero from "@/components/ui/smooth-scroll-hero";
 import { HeroStats } from "./HeroStats";
 import heroImage from "@/assets/hero-img.avif";
 import heroImageMobile from "@/assets/hero-img-responsive-mobile.jpg";
+import { ReleaseAnnouncement } from "@/features/download/components/ReleaseAnnouncement";
 
 const SCROLL_HEIGHT = 1200;
 
@@ -55,6 +56,8 @@ export function HeroSection() {
         className="pointer-events-none absolute inset-x-0 top-0 z-10 flex h-screen w-full items-center justify-center"
       >
         <div className="pointer-events-auto mx-auto max-w-3xl px-5 text-center sm:px-6">
+          <ReleaseAnnouncement className="mb-5" />
+
           <p className="eyebrow text-white/70">For worship teams</p>
 
           {/* The line break is a desktop nicety; on a phone it would strand a

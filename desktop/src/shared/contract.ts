@@ -19,6 +19,13 @@ import type {
   WorshipSet,
   WorshipSetItem,
 } from "@/types/database";
+import type {
+  BibleBook,
+  BibleChapterInfo,
+  BibleSearchHit,
+  BibleTranslation,
+  BibleVerse,
+} from "@/types/bible";
 
 /** Mirrors `SongFormValues` in src/features/songs/api.ts. */
 export interface SongFormValues {
@@ -71,7 +78,18 @@ export interface LocalProfile {
   church_id: string;
   email: string;
   name: string | null;
+  /**
+   * The dashboard spotlight tour has run. Shared with the web app, which uses
+   * the same flag on `profiles`.
+   */
   onboarding_completed: boolean;
+  /**
+   * The first-run setup wizard has been through -- church name and the user's
+   * name. Deliberately NOT the same flag as onboarding_completed: they run in
+   * sequence, the wizard first and the tour once the dashboard is reachable,
+   * and one flag could not tell the app which of the two it still owed.
+   */
+  setup_completed: boolean;
 }
 
 /** Facts about the running install, for the Settings page. */
@@ -142,8 +160,32 @@ export interface Ops {
 
   "profile.get": { args: void; result: LocalProfile };
   "profile.update": {
-    args: { patch: { name?: string; onboarding_completed?: boolean } };
+    args: {
+      patch: { name?: string; onboarding_completed?: boolean; setup_completed?: boolean };
+    };
     result: null;
+  };
+
+  /**
+   * Scripture. Reads only -- there is deliberately no write op, which is what
+   * stands in for the hosted app's "select policies and no others".
+   */
+  "bible.translations": { args: void; result: BibleTranslation[] };
+  "bible.books": { args: void; result: BibleBook[] };
+  "bible.chapterIndex": { args: { translationId: string }; result: BibleChapterInfo[] };
+  "bible.passage": {
+    args: {
+      translationId: string;
+      bookId: number;
+      chapter: number;
+      verseStart: number | null;
+      verseEnd: number | null;
+    };
+    result: BibleVerse[];
+  };
+  "bible.search": {
+    args: { translationId: string; query: string; limit: number };
+    result: BibleSearchHit[];
   };
 
   "app.info": { args: void; result: AppInfo };

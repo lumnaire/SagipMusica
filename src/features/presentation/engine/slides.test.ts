@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { slidesFromPassage } from "./loadPresentation";
+import { slidesFromPassage } from "./slides";
 import type { BibleBook, BibleVerse } from "@/types/bible";
 
 const JOHN: BibleBook = {

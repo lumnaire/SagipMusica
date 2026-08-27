@@ -87,6 +87,11 @@ export function MarketingFooter() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/releases" className={LINK_CLASS}>
+                    Releases
+                  </Link>
+                </li>
+                <li>
                   <Link to="/signup" className={LINK_CLASS}>
                     Create an account
                   </Link>

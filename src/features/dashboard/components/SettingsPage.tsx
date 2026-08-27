@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
+import { SupportCard } from "@/features/settings/components/SupportCard";
+import { CreditsCard } from "@/features/settings/components/CreditsCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -264,6 +266,10 @@ export function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <SupportCard />
+
+        <CreditsCard />
 
         <Card className="border-destructive/40">
           <CardHeader>

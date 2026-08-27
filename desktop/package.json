@@ -1,7 +1,7 @@
 {
   "name": "sagipmusica-desktop",
   "productName": "SagipMusica",
-  "version": "1.0.1",
+  "version": "1.2.1",
   "description": "Offline-first desktop build of SagipMusica",
   "main": "out/main/index.js",
   "author": "Lumnaire",

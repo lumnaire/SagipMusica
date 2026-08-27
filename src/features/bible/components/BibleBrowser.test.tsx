@@ -44,7 +44,7 @@ const { BOOKS, JOHN_3, TRANSLATION, CHAPTER_INDEX } = vi.hoisted(() => {
   };
 });
 
-vi.mock("../api", () => ({
+vi.mock("@/features/bible/api", () => ({
   fetchBooks: vi.fn().mockResolvedValue(BOOKS),
   fetchTranslations: vi.fn().mockResolvedValue([TRANSLATION]),
   fetchChapterIndex: vi.fn().mockResolvedValue(CHAPTER_INDEX),
@@ -102,7 +102,7 @@ describe("BibleBrowser", () => {
 
   it("searches the text when the input is not a reference", async () => {
     const user = userEvent.setup();
-    const api = await import("../api");
+    const api = await import("@/features/bible/api");
     render(<BibleBrowser onPresent={vi.fn()} />);
 
     await screen.findByRole("button", { name: "John" });

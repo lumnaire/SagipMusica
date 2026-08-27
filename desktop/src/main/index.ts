@@ -4,6 +4,7 @@ import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { closeDb, openDb } from "./db/connection";
 import { migrate } from "./db/migrate";
 import { seedIfEmpty } from "./db/seed";
+import { seedBibleIfEmpty } from "./db/bible-seed";
 import { registerIpc } from "./ipc";
 import { registerPresentationRelay } from "./presentation-relay";
 import { handleAppScheme, registerAppScheme, rendererDir } from "./protocol";
@@ -16,11 +17,11 @@ registerAppScheme();
 /** Held only so the second-instance handler can tell it apart. */
 let splashWindow: BrowserWindow | null = null;
 
-/** The hymn library that ships inside the installer. */
-function seedPath(): string {
+/** A file that ships inside the installer, wherever it ended up. */
+function resourcePath(filename: string): string {
   return app.isPackaged
-    ? path.join(process.resourcesPath, "hymnal-seed.json")
-    : path.join(app.getAppPath(), "resources", "hymnal-seed.json");
+    ? path.join(process.resourcesPath, filename)
+    : path.join(app.getAppPath(), "resources", filename);
 }
 
 // One instance only: two processes writing the same SQLite file is asking for
@@ -63,7 +64,10 @@ if (!app.requestSingleInstanceLock()) {
 
     const db = openDb();
     migrate(db);
-    seedIfEmpty(db, seedPath());
+    seedIfEmpty(db, resourcePath("hymnal-seed.json"));
+    // First launch after installing or upgrading to 1.2.1. Takes a couple of
+    // seconds for 31,102 verses; the splash is still up while it runs.
+    seedBibleIfEmpty(db, resourcePath("bible-seed.json"));
 
     registerIpc();
     registerPresentationRelay();

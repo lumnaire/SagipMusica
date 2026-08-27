@@ -1,30 +1,33 @@
 /**
  * Everything the download page states about the installer, in one place.
  *
- * These numbers are printed on the page, so they have to match the artifact
- * that `npm run build:win` produces in desktop/release/. When a new version
- * ships, update this file and nothing else.
+ * The version, date and size are NOT written here any more -- they are read
+ * off the newest entry in releases.ts. This file said 1.0.1 for the whole of
+ * 1.1 and 1.2 because it was a second place to remember, and a download page
+ * advertising a version that is two releases old is worse than one with no
+ * version on it at all. Ship a build by adding a row to RELEASES; this
+ * follows.
  */
+import { LATEST_RELEASE, formatReleaseDate, installerUrl } from "./releases";
 
-/** Matches `version` in desktop/package.json. */
-export const DESKTOP_VERSION = "1.0.1";
+/** Matches `version` in desktop/package.json, via releases.ts. */
+export const DESKTOP_VERSION = LATEST_RELEASE.version;
 
 /** The .exe size, rounded the way a download page conventionally shows it. */
-export const DESKTOP_SIZE = "108 MB";
+export const DESKTOP_SIZE = LATEST_RELEASE.size;
 
-export const DESKTOP_RELEASED = "24 August 2026";
+export const DESKTOP_RELEASED = formatReleaseDate(LATEST_RELEASE.date);
 
 /**
  * GitHub's `releases/latest/download/<asset>` redirect, not a link to one
- * tagged release: it resolves to whichever release is newest, so publishing
- * v1.0.1 updates this page's button without a code change. The filename is
- * fixed by `artifactName` in desktop/electron-builder.yml.
+ * tagged release: it resolves to whichever release is newest, so publishing a
+ * new version updates this page's button without a code change. The filename
+ * is fixed by `artifactName` in desktop/electron-builder.yml.
  */
-export const DOWNLOAD_URL =
-  "https://github.com/lumnaire/fbc-worship-tool/releases/latest/download/SagipMusica-Setup.exe";
+export const DOWNLOAD_URL = installerUrl(LATEST_RELEASE);
 
 /** Where the full list of builds and their notes lives. */
-export const RELEASES_URL = "https://github.com/lumnaire/fbc-worship-tool/releases";
+export const RELEASES_URL = "/releases";
 
 export const FACEBOOK_URL = "https://www.facebook.com/lumnaireph";
 

@@ -4,6 +4,7 @@ import { LOCAL_CHURCH_ID, LOCAL_PROFILE_ID } from "../ids";
 
 const KEY_NAME = "profile.name";
 const KEY_ONBOARDED = "profile.onboarding_completed";
+const KEY_SETUP = "profile.setup_completed";
 
 function read(key: string): string | null {
   const row = getDb().prepare("select value from app_settings where key = ?").get(key) as
@@ -33,12 +34,20 @@ export function get(): LocalProfile {
     email: "",
     name: read(KEY_NAME),
     onboarding_completed: read(KEY_ONBOARDED) === "true",
+    setup_completed: read(KEY_SETUP) === "true",
   };
 }
 
-export function update(patch: { name?: string; onboarding_completed?: boolean }): void {
+export function update(patch: {
+  name?: string;
+  onboarding_completed?: boolean;
+  setup_completed?: boolean;
+}): void {
   if (patch.name !== undefined) write(KEY_NAME, patch.name);
   if (patch.onboarding_completed !== undefined) {
     write(KEY_ONBOARDED, patch.onboarding_completed ? "true" : "false");
+  }
+  if (patch.setup_completed !== undefined) {
+    write(KEY_SETUP, patch.setup_completed ? "true" : "false");
   }
 }

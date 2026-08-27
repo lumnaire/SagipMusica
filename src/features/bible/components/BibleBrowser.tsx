@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useBibleStore } from "@/stores/bible-store";
-import { fetchPassage, searchVerses } from "../api";
+// NOT "../api", even though it sits right next door. The desktop build swaps
+// this module for a SQLite one by aliasing the exact specifier
+// "@/features/bible/api" (see desktop/electron.vite.config.ts), and Vite
+// matches aliases on the written specifier, not on the file it resolves to. A
+// relative import slips past the alias and pulls the Supabase client into a
+// build that has no Supabase — where it throws at module load and takes the
+// whole renderer down with it. That is a white screen on launch, not a
+// degraded Bible page, because this module is imported eagerly by the route
+// table. Every module the alias table lists must be imported by its "@/" path.
+import { fetchPassage, searchVerses } from "@/features/bible/api";
 import { formatReference, parseReference, type ParsedReference } from "../reference";
 import type { BibleBook, BibleSearchHit, BibleVerse } from "@/types/bible";
 

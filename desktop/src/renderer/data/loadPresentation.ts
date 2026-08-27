@@ -1,41 +1,27 @@
-import type { PresentationSlide } from "@/types/presentation";
-import type { SongWithSections } from "@/types/database";
+import {
+  newPassageGroupId,
+  slidesFromPassage,
+  slidesFromSong,
+} from "@/features/presentation/engine/slides";
+import {
+  decodeReference,
+  encodeReference,
+  formatReference,
+  type ParsedReference,
+} from "@/features/bible/reference";
+import type { PresentationSlide, ScriptureSlide } from "@/types/presentation";
+import type { BibleTranslation } from "@/types/bible";
 import { invoke } from "./invoke";
 
 /**
  * Desktop stand-in for src/features/presentation/engine/loadPresentation.ts.
  *
- * The slide-building rule is deliberately identical to the web version: one
- * title card per song, then its sections in order, with the title not repeated
- * on the lyric slides. Only the fetching changed.
+ * Only the fetching differs. The rules that turn rows into slides — the title
+ * card, the section labels, one verse of scripture per slide — are imported
+ * from the shared ./slides module rather than restated here, so the two builds
+ * cannot drift apart on what a presentation looks like. That module is NOT
+ * aliased; this one is.
  */
-function slidesFromSong(song: SongWithSections): PresentationSlide[] {
-  const titleSlide: PresentationSlide = {
-    id: `${song.id}:title`,
-    kind: "title",
-    songId: song.id,
-    songTitle: song.title,
-    songAuthor: song.author,
-    sectionId: "title",
-    sectionType: "custom",
-    sectionTitle: "Title",
-    lyrics: "",
-  };
-
-  const lyricSlides: PresentationSlide[] = song.sections.map((section) => ({
-    id: `${song.id}:${section.id}`,
-    kind: "lyrics",
-    songId: song.id,
-    songTitle: song.title,
-    songAuthor: song.author,
-    sectionId: section.id,
-    sectionType: section.type,
-    sectionTitle: section.title,
-    lyrics: section.lyrics,
-  }));
-
-  return [titleSlide, ...lyricSlides];
-}
 
 export async function loadSongSlides(songId: string): Promise<{
   title: string;
@@ -60,4 +46,57 @@ export async function loadWorshipSetSlides(setId: string): Promise<{
   }
 
   return { title: set.name, slides };
+}
+
+/** Fetches a passage and turns it into slides, ready to be started or appended. */
+export async function buildPassageSlides(
+  reference: ParsedReference,
+  translation: Pick<BibleTranslation, "id" | "abbreviation">,
+): Promise<{ title: string; slides: ScriptureSlide[] }> {
+  const verses = await invoke("bible.passage", {
+    translationId: translation.id,
+    bookId: reference.book.id,
+    chapter: reference.chapter ?? 1,
+    verseStart: reference.verseStart,
+    verseEnd: reference.verseEnd,
+  });
+
+  return {
+    title: formatReference(reference),
+    slides: slidesFromPassage(
+      reference,
+      translation,
+      verses,
+      newPassageGroupId(encodeReference(reference)),
+    ),
+  };
+}
+
+/** Raised when a /presentation URL names a passage that cannot be read. */
+export class UnreadableReferenceError extends Error {
+  constructor(encoded: string) {
+    super(`Not a passage: ${encoded}`);
+    this.name = "UnreadableReferenceError";
+  }
+}
+
+export async function loadScriptureSlides(
+  encoded: string,
+  translationId: string,
+): Promise<{ title: string; slides: PresentationSlide[] }> {
+  const [books, translations] = await Promise.all([
+    invoke("bible.books"),
+    invoke("bible.translations"),
+  ]);
+
+  const reference = decodeReference(encoded, books);
+  if (!reference) throw new UnreadableReferenceError(encoded);
+
+  const translation =
+    translations.find((t) => t.id === translationId) ??
+    translations.find((t) => t.is_default) ??
+    translations[0];
+  if (!translation) throw new UnreadableReferenceError(encoded);
+
+  return buildPassageSlides(reference, translation);
 }

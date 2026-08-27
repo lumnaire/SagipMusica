@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Download,
   Heart,
+  History,
   Library,
   ListMusic,
   MessageCircle,
@@ -20,6 +21,7 @@ import { MarketingNav } from "@/features/marketing/components/MarketingNav";
 import { MarketingFooter } from "@/features/marketing/components/MarketingFooter";
 import { SupportDialog } from "@/features/marketing/components/SupportDialog";
 import { DownloadDialog } from "./DownloadDialog";
+import { ReleaseAnnouncement } from "./ReleaseAnnouncement";
 import { UpcomingUpdates } from "./UpcomingUpdates";
 import {
   DESKTOP_RELEASED,
@@ -105,10 +107,14 @@ export function DownloadPage() {
 
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white/90">
-              <WindowsIcon className="h-3.5 w-3.5" />
-              Desktop app for Windows
-            </span>
+            <div className="flex flex-col items-center gap-3">
+              <ReleaseAnnouncement />
+
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white/90">
+                <WindowsIcon className="h-3.5 w-3.5" />
+                Desktop app for Windows
+              </span>
+            </div>
 
             <h1 className="mt-7 font-display text-4xl leading-[1.08] sm:text-6xl">
               Your hymnal, on the church computer
@@ -141,6 +147,17 @@ export function DownloadPage() {
                 Version {DESKTOP_VERSION} · {DESKTOP_SIZE} · Windows 10 &amp; 11
                 (64-bit)
               </p>
+
+              {/* Anyone reading the version number is already asking what is
+                  in it, and this is where they find out -- and where they find
+                  the older builds if they need one. */}
+              <Link
+                to="/releases"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-white/75 underline-offset-4 hover:text-white hover:underline"
+              >
+                <History className="h-4 w-4" />
+                What's new, and earlier versions
+              </Link>
             </div>
           </Reveal>
 
@@ -173,13 +190,13 @@ export function DownloadPage() {
               </div>
               <div>
                 <h2 className="font-display text-xl font-semibold text-foreground">
-                  This is version one — expect a few rough edges
+                  Still young — expect a few rough edges
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  It is a first release, so there will be bugs we have not found
-                  and things you wish worked differently. Both are worth telling
-                  us about. Suggestions from real worship teams are what decide
-                  the next version, and they are genuinely welcome — if
+                  SagipMusica is a young app, so there will be bugs we have not
+                  found and things you wish worked differently. Both are worth
+                  telling us about. Suggestions from real worship teams are what
+                  decide the next version, and they are genuinely welcome — if
                   something gets in your way on a Sunday, we want to hear it.
                 </p>
                 <Button asChild variant="outline" className="mt-5">

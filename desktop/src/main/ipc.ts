@@ -8,6 +8,7 @@ import * as library from "./db/repo/library";
 import * as church from "./db/repo/church";
 import * as dashboard from "./db/repo/dashboard";
 import * as profile from "./db/repo/profile";
+import * as bible from "./db/repo/bible";
 import { exportBackup, importBackup } from "./backup";
 import { appInfo } from "./app-info";
 
@@ -64,6 +65,13 @@ const handlers: Record<OpName, Handler> = {
     profile.update(patch);
     return null;
   },
+
+  "bible.translations": () => bible.translations(),
+  "bible.books": () => bible.books(),
+  "bible.chapterIndex": ({ translationId }: { translationId: string }) =>
+    bible.chapterIndex(translationId),
+  "bible.passage": (args) => bible.passage(args),
+  "bible.search": (args) => bible.search(args),
 
   "app.info": () => appInfo(),
 

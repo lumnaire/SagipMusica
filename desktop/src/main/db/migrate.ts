@@ -1,4 +1,5 @@
 import schemaSql from "./schema.sql?raw";
+import bibleSchemaSql from "./bible-schema.sql?raw";
 import type { Db } from "./connection";
 import { nowIso } from "./connection";
 import { newId } from "./ids";
@@ -102,6 +103,31 @@ function adoptLibraryIntoHymnal(db: Db): void {
 }
 
 /**
+ * Marks an already-in-use install as having been through first-run setup.
+ *
+ * 1.2.1 adds a setup wizard that asks for the church name and the user's name.
+ * The flag behind it defaults to false, which is right for a fresh install and
+ * wrong for every existing one: somebody who has been running services on this
+ * app since 1.0.0 should not be asked to introduce themselves again.
+ *
+ * A church row is the tell. On an upgrade there is one, because seedIfEmpty
+ * created it on some earlier launch. On a fresh install this runs BEFORE the
+ * seed -- migrate() is called first in main/index.ts -- so there is none, the
+ * flag stays false, and the wizard shows exactly once.
+ */
+function markSetupDoneForExistingInstalls(db: Db): void {
+  const church = db.prepare("select id from churches limit 1").get() as
+    | { id: string }
+    | undefined;
+  if (!church) return;
+
+  db.prepare(
+    `insert into app_settings (key, value) values ('profile.setup_completed', 'true')
+     on conflict(key) do update set value = excluded.value`,
+  ).run();
+}
+
+/**
  * Ordered migrations, driven by SQLite's `user_version` pragma. Step N runs
  * when user_version < N and bumps it to N. Never edit a shipped step — add a
  * new one, or installs in the field will diverge from fresh ones.
@@ -115,6 +141,19 @@ const MIGRATIONS: { version: number; up: (db: Db) => void }[] = [
     // 1.0.1: the library page is gone, so the library belongs in the hymnal.
     version: 2,
     up: adoptLibraryIntoHymnal,
+  },
+  {
+    // 1.2.1: scripture. Tables only -- the 31,102 verses are loaded by
+    // seedBibleIfEmpty, which needs the path to the seed file that ships in
+    // the installer and so cannot run from here.
+    version: 3,
+    up: (db) => db.exec(bibleSchemaSql),
+  },
+  {
+    // 1.2.1: the first-run wizard, which existing installs have no business
+    // seeing. Must stay AFTER 3 and run before the wizard can render.
+    version: 4,
+    up: markSetupDoneForExistingInstalls,
   },
 ];
 

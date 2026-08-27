@@ -5,6 +5,7 @@ import { SongPreviewPage } from "@/features/songs/components/SongPreviewPage";
 import { SongEditorPage } from "@/features/song-editor/components/SongEditorPage";
 import { WorshipSetsListPage } from "@/features/worship-sets/components/WorshipSetsListPage";
 import { WorshipSetEditorPage } from "@/features/worship-sets/components/WorshipSetEditorPage";
+import { BiblePage } from "@/features/bible/components/BiblePage";
 import { PresenterView } from "@/features/presentation/components/PresenterView";
 import { ProjectorView } from "@/features/presentation/components/ProjectorView";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -42,6 +43,10 @@ export function AppRoutes() {
       <Route path="/songs/library" element={<Navigate to="/songs" replace />} />
       <Route path="/songs/:id" element={<SongPreviewPage />} />
       <Route path="/songs/:id/edit" element={<SongEditorPage />} />
+
+      {/* The whole KJV ships in the installer and is read from SQLite, so
+          this works with the building's internet switched off. */}
+      <Route path="/bible" element={<BiblePage />} />
 
       <Route path="/sets" element={<WorshipSetsListPage />} />
       <Route path="/sets/new" element={<WorshipSetEditorPage />} />

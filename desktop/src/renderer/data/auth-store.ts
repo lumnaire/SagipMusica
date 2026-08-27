@@ -23,6 +23,15 @@ interface AuthState {
   session: LocalSession | null;
   profile: Profile | null;
   status: "loading" | "authenticated" | "unauthenticated";
+  /**
+   * Whether the first-run wizard has been through. Kept beside the profile
+   * rather than on it: `Profile` is the web app's shape and has no such field,
+   * and widening a shared type for one build's private state would leak the
+   * desktop's flow into every page that reads a profile.
+   */
+  setupCompleted: boolean;
+  /** Records the wizard's answers and marks it done. */
+  completeSetup: (answers: { name: string }) => Promise<void>;
   initialize: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateName: (name: string) => Promise<{ error: string | null }>;
@@ -66,6 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   profile: null,
   status: "loading",
+  setupCompleted: true,
 
   initialize: async () => {
     const local = await invoke("profile.get");
@@ -73,11 +83,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       profile: toProfile(local),
       session: { user: { id: local.id, email: local.email } },
       status: "authenticated",
+      setupCompleted: local.setup_completed,
+    });
+  },
+
+  completeSetup: async ({ name }) => {
+    const trimmed = name.trim();
+    await invoke("profile.update", {
+      patch: { setup_completed: true, ...(trimmed ? { name: trimmed } : {}) },
+    });
+    const profile = get().profile;
+    set({
+      setupCompleted: true,
+      profile: profile && trimmed ? { ...profile, name: trimmed } : profile,
     });
   },
 
   refreshProfile: async () => {
-    set({ profile: toProfile(await invoke("profile.get")) });
+    const local = await invoke("profile.get");
+    set({ profile: toProfile(local), setupCompleted: local.setup_completed });
   },
 
   updateName: async (name) => {

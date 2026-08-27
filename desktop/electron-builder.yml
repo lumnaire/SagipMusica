@@ -22,12 +22,18 @@ files:
   - package.json
   - "!**/*.map"
 
-# The hymn library the app seeds itself from on first run. It lives beside
-# app.asar rather than inside it because main/index.ts reads it straight from
-# process.resourcesPath.
+# What the app seeds itself from on first run: the hymn library, and the whole
+# King James Version. Both live beside app.asar rather than inside it because
+# main/index.ts reads them straight from process.resourcesPath.
+#
+# bible-seed.json is ~4.5MB, which is most of the installer's size and worth
+# every byte of it -- it is what makes scripture work with the church WiFi
+# switched off. Regenerate with `npm run bible:seed` from the repo root.
 extraResources:
   - from: resources/hymnal-seed.json
     to: hymnal-seed.json
+  - from: resources/bible-seed.json
+    to: bible-seed.json
 
 asar: true
 # better-sqlite3's compiled binding cannot be loaded from inside an asar

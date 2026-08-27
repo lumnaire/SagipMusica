@@ -7,39 +7,19 @@ import {
   type ParsedReference,
 } from "@/features/bible/reference";
 import { supabase } from "@/lib/supabase/client";
+import {
+  newPassageGroupId,
+  slidesFromPassage,
+  slidesFromSong,
+} from "@/features/presentation/engine/slides";
 import type { PresentationSlide, ScriptureSlide } from "@/types/presentation";
-import type { SongWithSections } from "@/types/database";
-import { SECTION_TYPE_LABELS } from "@/types/database";
-import type { BibleTranslation, BibleVerse } from "@/types/bible";
+import type { BibleTranslation } from "@/types/bible";
 
-function slidesFromSong(song: SongWithSections): PresentationSlide[] {
-  // Each song opens with a title card, then runs straight through its
-  // sections. The title is not repeated on the lyric slides.
-  const titleSlide: PresentationSlide = {
-    id: `${song.id}:title`,
-    kind: "title",
-    groupId: song.id,
-    groupTitle: song.title,
-    label: "Title slide",
-    preview: song.title,
-    songTitle: song.title,
-    songAuthor: song.author,
-  };
-
-  const lyricSlides: PresentationSlide[] = song.sections.map((section) => ({
-    id: `${song.id}:${section.id}`,
-    kind: "lyrics",
-    groupId: song.id,
-    groupTitle: song.title,
-    label: section.title || SECTION_TYPE_LABELS[section.type],
-    preview: section.lyrics.split("\n")[0] ?? "",
-    songTitle: song.title,
-    sectionType: section.type,
-    lyrics: section.lyrics,
-  }));
-
-  return [titleSlide, ...lyricSlides];
-}
+/**
+ * Fetching, and only fetching. The rules that turn rows into slides live in
+ * ./slides.ts because this module is replaced wholesale on the desktop build
+ * — see the alias table in desktop/electron.vite.config.ts.
+ */
 
 export async function loadSongSlides(songId: string): Promise<{
   title: string;
@@ -75,61 +55,21 @@ export async function loadWorshipSetSlides(setId: string): Promise<{
   return { title: set.name as string, slides };
 }
 
-/**
- * ONE VERSE PER SLIDE.
- *
- * The obvious alternative is packing verses together until the slide is full,
- * and it is worse for the thing this is actually for. Scripture is read aloud
- * a verse at a time, so a verse per slide lets the presenter advance in step
- * with the reader instead of guessing where in a block of four they are. It
- * also means the reference printed on the screen is exact — the congregation
- * is looking at verse 17 and the screen says verse 17 — which a packed slide
- * can only manage as a range.
- *
- * The cost is more slides for a long passage, which costs a keypress each, and
- * a very long verse having to be shrunk to fit (SlideCanvas does that). If a
- * church ever wants verses grouped, it is a display setting and it belongs
- * next to the font size, not baked in here.
- */
-export function slidesFromPassage(
-  reference: ParsedReference,
-  translation: Pick<BibleTranslation, "abbreviation">,
-  verses: BibleVerse[],
-  /** Distinguishes two copies of the same passage in one presentation. */
-  groupId: string,
-): ScriptureSlide[] {
-  const groupTitle = formatReference(reference);
-
-  return verses.map((verse) => ({
-    id: `${groupId}:${verse.chapter}:${verse.verse}`,
-    kind: "scripture",
-    groupId,
-    groupTitle,
-    label: `v.${verse.verse}`,
-    preview: verse.text,
-    reference: `${reference.book.name} ${verse.chapter}:${verse.verse}`,
-    translation: translation.abbreviation,
-    text: verse.text,
-  }));
-}
-
-/**
- * Fetches a passage and turns it into slides, ready to be started or appended.
- *
- * The group id carries a nonce so that adding John 3:16 to a presentation that
- * already contains John 3:16 produces two separate headings in the presenter's
- * list rather than one that appears to have doubled in length.
- */
+/** Fetches a passage and turns it into slides, ready to be started or appended. */
 export async function buildPassageSlides(
   reference: ParsedReference,
   translation: Pick<BibleTranslation, "id" | "abbreviation">,
 ): Promise<{ title: string; slides: ScriptureSlide[] }> {
   const verses = await fetchPassage(translation.id, reference);
-  const groupId = `scripture:${encodeReference(reference)}:${crypto.randomUUID().slice(0, 8)}`;
 
   return {
     title: formatReference(reference),
-    slides: slidesFromPassage(reference, translation, verses, groupId),
+    slides: slidesFromPassage(
+      reference,
+      translation,
+      verses,
+      newPassageGroupId(encodeReference(reference)),
+    ),
   };
 }
 

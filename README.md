@@ -167,6 +167,7 @@ scripts/
   check-map-migration.mjs         runs 0018 against a throwaway Postgres
   generate-bible-migration.mjs    regenerates 0021 from the KJV source JSON
   check-bible-migration.mjs       runs 0020+0021 against a throwaway Postgres
+  build-bible-seed.mjs            regenerates the desktop's copy of the Bible
 docs/
   hymnal-copyright-review.md      which imported hymns ship without lyrics, and why
 ```
@@ -231,6 +232,12 @@ Anything else here that can outgrow 1,000 rows needs the same treatment.
 Translations are a **table**, not a column, even though only the KJV is seeded. Ang
 Dating Biblia is going to be asked for; adding it should be an insert plus a
 generated verse file, not a schema change.
+
+The desktop build ships the same verses in SQLite. `npm run bible:seed` **applies**
+these migrations to a throwaway Postgres and reads the rows back out into
+`desktop/resources/bible-seed.json`, rather than parsing 5MB of generated SQL by
+hand — so the two builds are serving the same scripture by construction. Re-run it
+whenever `0021` changes.
 
 ### Finding a passage
 

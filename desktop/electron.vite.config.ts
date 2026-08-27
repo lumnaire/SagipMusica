@@ -57,6 +57,7 @@ const dataLayerOverrides = [
   { find: "@/features/songs/hooks/useSongs", replacement: desktop("renderer/data/useSongs.ts") },
   { find: "@/features/worship-sets/api", replacement: desktop("renderer/data/worship-sets.ts") },
   { find: "@/features/dashboard/api", replacement: desktop("renderer/data/dashboard.ts") },
+  { find: "@/features/bible/api", replacement: desktop("renderer/data/bible.ts") },
   { find: "@/lib/save-sections", replacement: desktop("renderer/data/save-sections.ts") },
   {
     find: "@/features/presentation/engine/loadPresentation",

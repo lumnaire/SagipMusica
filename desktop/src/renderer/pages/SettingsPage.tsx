@@ -2,6 +2,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Download, Upload } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { SupportCard } from "@/features/settings/components/SupportCard";
+import {
+  CreditsCard,
+  CreditsRow,
+} from "@/features/settings/components/CreditsCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -242,23 +247,17 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">About</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Version</span>
-              <span>{info?.version ?? "—"}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground">Your data is stored at</span>
-              <code className="break-all rounded bg-muted px-2 py-1 text-xs">
-                {info?.databasePath ?? "—"}
-              </code>
-            </div>
-          </CardContent>
-        </Card>
+        <SupportCard />
+
+        <CreditsCard>
+          <CreditsRow label="Version">{info?.version ?? "—"}</CreditsRow>
+          <CreditsRow label="Your data is stored at" stacked>
+            <code className="block break-all rounded bg-muted px-2 py-1 text-xs">
+              {info?.databasePath ?? "—"}
+            </code>
+          </CreditsRow>
+        </CreditsCard>
+
       </div>
     </AppShell>
   );
