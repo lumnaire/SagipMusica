@@ -58,7 +58,7 @@ export function HeroSection() {
         <div className="pointer-events-auto mx-auto max-w-3xl px-5 text-center sm:px-6">
           <ReleaseAnnouncement className="mb-5" />
 
-          <p className="eyebrow text-white/70">For worship teams</p>
+          <p className="eyebrow text-white/70">Baptist worship teams</p>
 
           {/* The line break is a desktop nicety; on a phone it would strand a
               word, so let the text wrap naturally there. */}
