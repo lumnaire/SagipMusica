@@ -21,6 +21,7 @@ import { SongPreviewPage } from "@/features/songs/components/SongPreviewPage";
 import { SongEditorPage } from "@/features/song-editor/components/SongEditorPage";
 import { WorshipSetsListPage } from "@/features/worship-sets/components/WorshipSetsListPage";
 import { WorshipSetEditorPage } from "@/features/worship-sets/components/WorshipSetEditorPage";
+import { BiblePage } from "@/features/bible/components/BiblePage";
 import { PresenterView } from "@/features/presentation/components/PresenterView";
 import { ProjectorView } from "@/features/presentation/components/ProjectorView";
 
@@ -128,6 +129,15 @@ export function AppRoutes() {
         element={
           <ProtectedRoute requireRole="admin">
             <SongEditorPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/bible"
+        element={
+          <ProtectedRoute>
+            <BiblePage />
           </ProtectedRoute>
         }
       />

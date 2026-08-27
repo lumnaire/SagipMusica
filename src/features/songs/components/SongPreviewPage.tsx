@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { SlideCanvas } from "@/features/presentation/components/SlideCanvas";
 import { loadSongSlides } from "@/features/presentation/engine/loadPresentation";
 import { DEFAULT_PRESENTATION_STYLE, type PresentationSlide } from "@/types/presentation";
-import { SECTION_TYPE_LABELS } from "@/types/database";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function SongPreviewPage() {
@@ -109,7 +108,7 @@ export function SongPreviewPage() {
                         : "bg-muted text-muted-foreground hover:bg-muted/70",
                     )}
                   >
-                    {s.sectionTitle || SECTION_TYPE_LABELS[s.sectionType]}
+                    {s.label}
                   </button>
                 ))}
               </div>

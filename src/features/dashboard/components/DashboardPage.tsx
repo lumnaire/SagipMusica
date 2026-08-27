@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Music2, ListMusic, BookOpen, Sparkles, Plus, PlayCircle } from "lucide-react";
+import { Music2, ListMusic, BookOpen, Library, Sparkles, Plus, PlayCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,14 @@ export function DashboardPage() {
             },
           },
           {
+            element: '[data-tour-id="nav-bible"]',
+            popover: {
+              title: "The Bible is built in",
+              description:
+                "The whole King James Version, already here — no add-on, no internet needed to read it. Type a reference like John 3:16, or search for the words you remember, and put it straight on the screen.",
+            },
+          },
+          {
             element: '[data-tour-id="nav-settings"]',
             popover: {
               title: "Settings",
@@ -138,7 +146,7 @@ export function DashboardPage() {
             loading={loading}
           />
           <StatCard
-            icon={BookOpen}
+            icon={Library}
             label="Total Hymns"
             value={stats?.totalHymns}
             loading={loading}
@@ -175,6 +183,10 @@ export function DashboardPage() {
             <Button variant="outline" onClick={() => navigate("/sets")}>
               <PlayCircle className="h-4 w-4" />
               Start Presentation
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/bible")}>
+              <BookOpen className="h-4 w-4" />
+              Open the Bible
             </Button>
           </div>
         </div>

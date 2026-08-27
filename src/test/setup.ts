@@ -44,5 +44,10 @@ class BroadcastChannelStub {
 // @ts-expect-error -- test polyfill
 globalThis.BroadcastChannel = BroadcastChannelStub;
 
+// jsdom has no layout, so it implements no scrolling either. The Bible picker
+// scrolls a verse reached by typing a reference into view, which is a no-op
+// worth keeping rather than guarding at the call site.
+Element.prototype.scrollIntoView = function scrollIntoView() {};
+
 vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
 vi.stubEnv("VITE_SUPABASE_ANON_KEY", "test-anon-key");

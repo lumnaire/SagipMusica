@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "map:generate": "node scripts/generate-world-map.mjs && node scripts/inline-country-places.mjs",
-    "map:check": "node scripts/check-map-migration.mjs"
+    "map:check": "node scripts/check-map-migration.mjs",
+    "bible:generate": "node scripts/generate-bible-migration.mjs",
+    "bible:check": "node scripts/check-bible-migration.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

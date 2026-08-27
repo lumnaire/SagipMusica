@@ -1,25 +1,62 @@
+/**
+ * Fully resolved, presentation-ready slides.
+ *
+ * The presentation engine only ever consumes these shapes — it never knows
+ * about Song, SongSection or BibleVerse rows directly. Everything that has to
+ * decide how a slide is *named* or *grouped* has already been decided by the
+ * time a slide reaches here, in loadPresentation.ts, so the presenter list and
+ * the projector canvas both read the same answer instead of each working it
+ * out from the underlying row and drifting apart.
+ */
 import type { SectionType } from "./database";
 
-/**
- * Fully resolved, presentation-ready view of a single section.
- * The presentation engine only ever consumes this shape — it never
- * knows about Song/SongSection database rows directly.
- */
-export interface PresentationSlide {
-  id: string; // stable id: `${songId}:${sectionId}`
+interface SlideBase {
+  /** Stable and unique within a presentation. */
+  id: string;
   /**
-   * "title" is the opening card for a song — song name only, no lyrics.
-   * One is generated per song; every other slide is "lyrics".
+   * Consecutive slides sharing a groupId are one heading in the presenter's
+   * list — a song, or a passage of scripture. This is what the list groups on;
+   * it deliberately does not care which of those it is.
    */
-  kind: "title" | "lyrics";
-  songId: string;
+  groupId: string;
+  /** The heading itself: "Amazing Grace", or "John 3:16-18". */
+  groupTitle: string;
+  /** How this one slide is named under that heading: "Verse 2", "v.17". */
+  label: string;
+  /** A line of what is on the slide, shown under the label. */
+  preview: string;
+}
+
+/** The opening card for a song: its name and author, no lyrics. */
+export interface SongTitleSlide extends SlideBase {
+  kind: "title";
   songTitle: string;
   songAuthor: string | null;
-  sectionId: string;
+}
+
+export interface LyricsSlide extends SlideBase {
+  kind: "lyrics";
+  songTitle: string;
   sectionType: SectionType;
-  sectionTitle: string;
   lyrics: string;
 }
+
+/**
+ * One verse of scripture, or a few shown together. The reference is carried on
+ * the slide rather than derived from the group heading because it is printed
+ * on the projected image — the congregation needs to know what is being read,
+ * and a passage spanning several slides has a different reference on each.
+ */
+export interface ScriptureSlide extends SlideBase {
+  kind: "scripture";
+  /** As cited: "John 3:16", or "John 3:16-17" where two verses share a slide. */
+  reference: string;
+  /** The translation's abbreviation — "KJV". */
+  translation: string;
+  text: string;
+}
+
+export type PresentationSlide = SongTitleSlide | LyricsSlide | ScriptureSlide;
 
 export interface PresentationStyle {
   backgroundColor: string;

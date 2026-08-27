@@ -71,6 +71,17 @@ describe("DashboardPage role-gating", () => {
     expect(screen.getByRole("button", { name: /start presentation/i })).toBeInTheDocument();
   });
 
+  it("offers the Bible to everyone, presenters included", async () => {
+    // Reading scripture is not an admin privilege, and the presenter running
+    // the desk on a Sunday is exactly who needs it.
+    setAuthProfile("presenter");
+    renderPage();
+
+    await screen.findByText(/quick actions/i);
+
+    expect(screen.getByRole("button", { name: /open the bible/i })).toBeInTheDocument();
+  });
+
   it("shows 'Add Song' to an admin", async () => {
     setAuthProfile("admin");
     renderPage();

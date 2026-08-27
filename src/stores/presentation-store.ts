@@ -17,6 +17,17 @@ interface PresentationState {
   channel: PresentationChannel | null;
 
   start: (sessionId: string, title: string, slides: PresentationSlide[]) => void;
+  /**
+   * Adds slides to the end of a running presentation and returns the index of
+   * the first one. Used to drop a passage of scripture into a service that is
+   * already going.
+   *
+   * It deliberately does NOT move to them. There is one cursor in this engine
+   * and it is the live one, so jumping would put the new slide on the
+   * sanctuary screen the instant it was added — in the middle of whatever song
+   * is currently up. The presenter clicks it when they are ready.
+   */
+  appendSlides: (slides: PresentationSlide[]) => number;
   stop: () => void;
   goTo: (index: number) => void;
   next: () => void;
@@ -69,6 +80,15 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
       channel,
     });
     broadcastState(get());
+  },
+
+  appendSlides: (incoming) => {
+    const { slides, currentIndex } = get();
+    if (incoming.length === 0) return currentIndex;
+
+    set({ slides: [...slides, ...incoming] });
+    broadcastState(get());
+    return slides.length;
   },
 
   stop: () => {

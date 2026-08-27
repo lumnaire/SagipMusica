@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Tags,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -76,7 +77,10 @@ const NAV: NavSection[] = [
   },
   {
     title: "Worship",
-    items: [{ label: "Worship Sets", to: "/sets", icon: ListMusic, tourId: "nav-sets" }],
+    items: [
+      { label: "Worship Sets", to: "/sets", icon: ListMusic, tourId: "nav-sets" },
+      { label: "Bible", to: "/bible", icon: BookOpen, tourId: "nav-bible" },
+    ],
   },
   {
     title: null,

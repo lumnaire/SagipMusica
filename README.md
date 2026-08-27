@@ -152,7 +152,9 @@ src/
     worship-sets/       worship set CRUD, song picker, reordering
     presentation/        engine (BroadcastChannel, slide loader), presenter
                           controls, projector view, the 16:9 slide canvas
-  stores/               Zustand: auth-store, church-store, presentation-store
+    bible/              scripture picker, reference parser, verse search
+  stores/               Zustand: auth-store, church-store, presentation-store,
+                          bible-store
   types/                Church/Profile/Song/... types
   test/                 Vitest setup + a mock Supabase query-builder helper
 supabase/
@@ -163,6 +165,8 @@ scripts/
   generate-world-map.mjs          regenerates the SVG world + country gazetteer
   inline-country-places.mjs       pastes that gazetteer into 0018
   check-map-migration.mjs         runs 0018 against a throwaway Postgres
+  generate-bible-migration.mjs    regenerates 0021 from the KJV source JSON
+  check-bible-migration.mjs       runs 0020+0021 against a throwaway Postgres
 docs/
   hymnal-copyright-review.md      which imported hymns ship without lyrics, and why
 ```
@@ -187,6 +191,61 @@ rather than hand-editing the SQL. 21 hymns whose words are still under copyright
 imported as metadata only, with no lyrics; see
 [docs/hymnal-copyright-review.md](docs/hymnal-copyright-review.md), which also lists
 the titles that still need a human check.
+
+## The Bible
+
+The whole King James Version — the 1769 Blayney revision, public domain — lives in
+our own database: `bible_books`, `bible_verses` and `bible_translations`, added by
+`0020_bible.sql`. **No API call is ever made to read a verse.** Putting somebody
+else's uptime and rate limit in the path of scripture going on the screen mid-sermon
+is not acceptable in buildings whose internet is a phone hotspot, and it is why the
+desktop build will be able to ship the same rows in a local file and behave
+identically offline.
+
+`0021_bible_kjv_verses.sql` is **generated** and holds all 31,102 verses — edit
+`scripts/generate-bible-migration.mjs` and re-run `npm run bible:generate` rather
+than hand-editing 5MB of SQL. It applies two transformations, both documented in the
+script's header: the source's paragraph pilcrows become the `paragraph` column, and
+the brackets it puts around words supplied by the translators are dropped, because
+on a sanctuary screen they read as a typo.
+
+`npm run bible:check` applies both migrations to a throwaway Postgres and verifies
+**all 1,189 chapters** against an independent transcription of the KJV, plus a set of
+landmark verses, the search, and that scripture is read-only — there are select
+policies and no others, so no signed-in user and no admin can write a word of it.
+The per-chapter table it checks against came from a different transcription by
+different people, so it is a real cross-check rather than the import agreeing with
+itself.
+
+### Reading more than 1,000 rows
+
+`bible_chapters` is 1,189 rows, and **PostgREST caps a response at 1,000 by default
+and does it silently** — the request succeeds, `error` is null, and you are handed a
+prefix. Because the rows come back in canonical order, the half that vanished was
+the end of the Bible: the picker showed John stopping at chapter 3 and Acts through
+Revelation with no chapters at all, while the database was complete the whole time.
+`fetchChapterIndex` therefore pages, taking its page size from what the server
+actually returned rather than from a constant, with `count` as a definite target.
+Anything else here that can outgrow 1,000 rows needs the same treatment.
+
+Translations are a **table**, not a column, even though only the KJV is seeded. Ang
+Dating Biblia is going to be asked for; adding it should be an insert plus a
+generated verse file, not a schema change.
+
+### Finding a passage
+
+One box does both jobs, because a presenter should not have to decide which one they
+are doing before they start typing. Anything that reads as a reference —
+`jn 3:16`, `Psalm 23`, `I John 4:7-8` — jumps there; anything else is searched as
+words against a Postgres full-text index. `src/features/bible/reference.ts` tells
+them apart, and the book spellings it matches live in the database (`bible_books.aliases`)
+so the desktop build can parse against the same rows.
+
+Scripture presents as **one verse per slide**, so the presenter advances in step with
+whoever is reading aloud and the reference on screen is always exact. From a running
+presentation, the **Bible** button adds a passage to the end without cutting to it —
+there is one cursor in the engine and it is the live one, so jumping would put the
+verse on the sanctuary screen in the middle of the current song.
 
 ## The pin map
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   MonitorPlay,
@@ -15,10 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { usePresentationStore } from "@/stores/presentation-store";
-import { loadSongSlides, loadWorshipSetSlides } from "@/features/presentation/engine/loadPresentation";
+import {
+  buildPassageSlides,
+  loadScriptureSlides,
+  loadSongSlides,
+  loadWorshipSetSlides,
+} from "@/features/presentation/engine/loadPresentation";
 import { SlideCanvas } from "./SlideCanvas";
 import { PresentationSettingsDialog } from "./PresentationSettingsDialog";
-import { SECTION_TYPE_LABELS } from "@/types/database";
+import { BibleDialog } from "@/features/bible/components/BibleDialog";
+import { formatReference, type ParsedReference } from "@/features/bible/reference";
+import { useBibleStore } from "@/stores/bible-store";
 import { useFullscreen } from "@/hooks/useFullscreen";
 
 export function PresenterView() {
@@ -29,6 +37,7 @@ export function PresenterView() {
   const { toggle: toggleFullscreen } = useFullscreen(previewRef);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [bibleOpen, setBibleOpen] = useState(false);
 
   const {
     title,
@@ -37,6 +46,7 @@ export function PresenterView() {
     displayMode,
     style,
     start,
+    appendSlides,
     stop,
     next,
     previous,
@@ -50,9 +60,12 @@ export function PresenterView() {
     if (!sessionId) return;
     const type = searchParams.get("type");
     const id = searchParams.get("id");
-    if (!type || !id) {
+    // Scripture is named by a reference rather than a row id — see
+    // encodeReference. Everything else is a uuid in `id`.
+    const ref = searchParams.get("ref");
+    if (type === "scripture" ? !ref : !type || !id) {
       toast.error("Missing presentation content.");
-      navigate("/sets");
+      navigate(type === "scripture" ? "/bible" : "/sets");
       return;
     }
 
@@ -61,7 +74,11 @@ export function PresenterView() {
       setLoading(true);
       try {
         const result =
-          type === "set" ? await loadWorshipSetSlides(id) : await loadSongSlides(id);
+          type === "scripture"
+            ? await loadScriptureSlides(ref!, searchParams.get("translation") ?? "kjv")
+            : type === "set"
+              ? await loadWorshipSetSlides(id!)
+              : await loadSongSlides(id!);
         if (cancelled) return;
         if (result.slides.length === 0) {
           toast.error("This content has no sections to present yet.");
@@ -84,7 +101,7 @@ export function PresenterView() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (settingsOpen) return;
+      if (settingsOpen || bibleOpen) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
@@ -120,7 +137,42 @@ export function PresenterView() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [next, previous, first, last, toggleBlack, toggleFullscreen, settingsOpen]);
+  }, [next, previous, first, last, toggleBlack, toggleFullscreen, settingsOpen, bibleOpen]);
+
+  /**
+   * Drops a passage into the running presentation. `goLive` is the difference
+   * between the picker's two buttons: "Present" puts it on the sanctuary
+   * screen now, "Add to presentation" queues it at the end for the presenter
+   * to reach when the service gets there.
+   */
+  async function addPassage(reference: ParsedReference, goLive: boolean) {
+    const { translations, translationId } = useBibleStore.getState();
+    const translation = translations.find((t) => t.id === translationId) ?? translations[0];
+    if (!translation) {
+      toast.error("The Bible is still loading. Try again in a moment.");
+      return;
+    }
+
+    try {
+      const { slides: passage } = await buildPassageSlides(reference, translation);
+      if (passage.length === 0) {
+        toast.error("That passage has no verses.");
+        return;
+      }
+
+      const index = appendSlides(passage);
+      if (goLive) {
+        goTo(index);
+      } else {
+        toast.success(
+          `${formatReference(reference)} added — ${passage.length} slide${passage.length === 1 ? "" : "s"} at the end.`,
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not load that passage.");
+    }
+  }
 
   function openProjector() {
     if (!sessionId) return;
@@ -150,6 +202,13 @@ export function PresenterView() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {/* Scripture mid-service is the thing this view was missing. Kept
+              first and always labelled, because it is reached under time
+              pressure with a congregation waiting. */}
+          <Button variant="outline" size="sm" onClick={() => setBibleOpen(true)}>
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Bible</span>
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
             <Settings2 className="h-4 w-4" />
             <span className="hidden lg:inline">Display Settings</span>
@@ -226,6 +285,13 @@ export function PresenterView() {
       </footer>
 
       <PresentationSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      <BibleDialog
+        open={bibleOpen}
+        onOpenChange={setBibleOpen}
+        onPresent={(reference) => void addPassage(reference, true)}
+        onAdd={(reference) => void addPassage(reference, false)}
+      />
     </div>
   );
 }
@@ -247,18 +313,22 @@ function SectionList({
     );
   }
 
-  let lastSongId: string | null = null;
+  // Groups are runs of consecutive slides — a song, or a passage of
+  // scripture. The list does not care which; both arrive with a groupId and a
+  // heading already worked out. See loadPresentation.
+  let lastGroupId: string | null = null;
 
   return (
     <div className="p-2">
       {slides.map((slide, i) => {
-        const showSongHeader = slide.songId !== lastSongId;
-        lastSongId = slide.songId;
+        const showHeader = slide.groupId !== lastGroupId;
+        lastGroupId = slide.groupId;
         return (
           <div key={slide.id}>
-            {showSongHeader && (
-              <p className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground first:pt-1">
-                {slide.songTitle}
+            {showHeader && (
+              <p className="flex items-center gap-1.5 px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground first:pt-1">
+                {slide.kind === "scripture" && <BookOpen className="h-3 w-3 shrink-0" />}
+                <span className="truncate">{slide.groupTitle}</span>
               </p>
             )}
             <button
@@ -271,18 +341,14 @@ function SectionList({
                   : "text-foreground hover:bg-muted",
               )}
             >
-              <span className="font-medium">
-                {slide.kind === "title"
-                  ? "Title slide"
-                  : slide.sectionTitle || SECTION_TYPE_LABELS[slide.sectionType]}
-              </span>
+              <span className="font-medium">{slide.label}</span>
               <span
                 className={cn(
                   "line-clamp-1 text-xs",
                   i === currentIndex ? "text-primary-foreground/75" : "text-muted-foreground",
                 )}
               >
-                {slide.kind === "title" ? slide.songTitle : slide.lyrics.split("\n")[0]}
+                {slide.preview}
               </span>
             </button>
           </div>

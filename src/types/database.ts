@@ -24,6 +24,7 @@ export type ReferralSource =
   | "youtube"
   | "linkedin"
   | "instagram"
+  | "threads"
   | "friend"
   | "other";
 
@@ -170,11 +171,17 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   custom: "Custom",
 };
 
+/**
+ * Insertion order is the order the onboarding radio list renders in -- see
+ * REFERRAL_OPTIONS in OnboardingPage. Threads sits with the other Meta
+ * platforms; "a friend" and "other" stay last, where a catch-all belongs.
+ */
 export const REFERRAL_SOURCE_LABELS: Record<ReferralSource, string> = {
   facebook: "Facebook",
   youtube: "YouTube",
   linkedin: "LinkedIn",
   instagram: "Instagram",
+  threads: "Threads",
   friend: "A friend recommended it",
   other: "Other",
 };
