@@ -186,9 +186,11 @@ export function SongForm({
         </CardContent>
       </Card>
 
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-foreground">Song Sections</h2>
-        <div className="flex gap-2">
+        {/* Two labelled buttons do not fit beside the heading on a phone;
+            let them take the next line rather than widening the page. */}
+        <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setPasteOpen(true)}>
             <ClipboardPaste className="h-4 w-4" />
             Paste whole song

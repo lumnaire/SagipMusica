@@ -226,15 +226,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <div className="flex min-h-svh flex-1 flex-col">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           <img src={sagipmusicaLogo} alt="" className="h-7 w-7 object-contain" />
-          <p className="truncate text-sm font-semibold">{church?.name ?? "SagipMusica"}</p>
+          <p className="min-w-0 truncate text-sm font-semibold">{church?.name ?? "SagipMusica"}</p>
         </header>
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
       </div>
     </div>
   );

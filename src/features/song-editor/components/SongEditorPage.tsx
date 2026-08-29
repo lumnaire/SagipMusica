@@ -148,13 +148,13 @@ export function SongEditorPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/songs")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold text-foreground">
                 {isNew ? "Add Song" : "Edit Song"}
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -162,14 +162,18 @@ export function SongEditorPage() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 sm:shrink-0">
             {songId && (
-              <Button variant="outline" onClick={() => navigate(`/songs/${songId}`)}>
+              <Button
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                onClick={() => navigate(`/songs/${songId}`)}
+              >
                 <Eye className="h-4 w-4" />
                 Preview
               </Button>
             )}
-            <Button onClick={handleSave} disabled={saving}>
+            <Button className="flex-1 sm:flex-none" onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4" />
               {saving ? "Saving..." : "Save Song"}
             </Button>

@@ -241,8 +241,14 @@
   .legal-prose strong {
     @apply font-semibold text-foreground;
   }
+  /* A three-column table of cookie names cannot fit across a phone, and the
+     names themselves are unbreakable strings. Let the table scroll inside its
+     own box rather than dragging the whole page sideways. */
   .legal-prose table {
-    @apply mb-4 w-full border-collapse text-sm;
+    @apply mb-4 block w-full max-w-full overflow-x-auto border-collapse text-sm;
+  }
+  .legal-prose code {
+    @apply break-words;
   }
   .legal-prose th {
     @apply border-b border-border py-2 pr-4 text-left font-semibold text-foreground;
