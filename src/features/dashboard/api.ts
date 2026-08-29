@@ -33,3 +33,20 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 export async function markOnboardingComplete(profileId: string): Promise<void> {
   await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", profileId);
 }
+
+/**
+ * Puts the first-run walkthrough back, so it can be watched again.
+ *
+ * The tour is a one-shot: it sets the flag as it closes, including when it is
+ * dismissed rather than finished, and there is no other way to get it back
+ * from inside the app. That makes "the walkthrough never appeared" impossible
+ * to answer -- you cannot tell a tour that broke from one that was skipped by
+ * a stray Escape. This is the answer: run it again and see.
+ */
+export async function restartOnboarding(profileId: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ onboarding_completed: false })
+    .eq("id", profileId);
+  if (error) throw error;
+}

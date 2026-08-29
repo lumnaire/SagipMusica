@@ -11,6 +11,7 @@ import {
   saveSongSections,
   type SongFormValues,
 } from "@/features/songs/api";
+import { HiddenToken } from "@/features/event/components/HiddenToken";
 import { SongForm } from "./SongForm";
 import { emptySection } from "../sections";
 import type { EditableSection } from "../types";
@@ -32,6 +33,16 @@ export function SongEditorPage() {
 
   const [songId, setSongId] = useState<string | null>(id ?? null);
   const [form, setForm] = useState<SongFormValues>(EMPTY_FORM);
+  /**
+   * The title as it is stored, which is not the same as form.title.
+   *
+   * The hunt's first code word is hidden on one particular song, and this is
+   * what the page tells the server about itself. Taking it from the live field
+   * would send a probe on every keystroke; taking it from the saved value
+   * means one probe per song opened, and matches what the riddle asks for --
+   * a song you have actually added to your hymnal.
+   */
+  const [savedTitle, setSavedTitle] = useState("");
   const [sections, setSections] = useState<EditableSection[]>([]);
   const [existingSectionIds, setExistingSectionIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(!isNew);
@@ -66,6 +77,7 @@ export function SongEditorPage() {
           })),
         );
         setExistingSectionIds(song.sections.map((s) => s.id));
+        setSavedTitle(song.title);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load song.");
@@ -110,6 +122,7 @@ export function SongEditorPage() {
         prev.map((s, i) => ({ ...s, id: saved[i]?.id ?? s.id, key: saved[i]?.id ?? s.key })),
       );
       setExistingSectionIds(saved.map((s) => s.id));
+      setSavedTitle(form.title);
 
       toast.success(isNew ? "Song created." : "Song saved.");
 
@@ -170,7 +183,11 @@ export function SongEditorPage() {
           onSectionsChange={setSections}
         />
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex items-center justify-end gap-3">
+          {/* Nothing renders here unless the server says this particular song
+              is hiding something -- see HiddenToken. On every other song, and
+              for everyone not in the hunt, this is an empty flex child. */}
+          {songId && <HiddenToken slot="song-editor" context={savedTitle} />}
           <Button onClick={handleSave} disabled={saving}>
             <Save className="h-4 w-4" />
             {saving ? "Saving..." : "Save Song"}

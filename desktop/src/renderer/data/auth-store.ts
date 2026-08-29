@@ -65,6 +65,11 @@ function toProfile(local: {
     email: local.email,
     name: local.name,
     role: LOCAL_ROLE,
+    // Every feature is already unlocked on a local install -- there is nothing
+    // to sell and nobody to bill -- so the tier is a formality kept only
+    // because the shared Profile type carries it.
+    subscription: "free",
+    subscription_granted_at: null,
     onboarding_completed: local.onboarding_completed,
     created_at: now,
     updated_at: now,

@@ -131,6 +131,16 @@ npm run test        # run once
 npm run test:watch  # watch mode
 ```
 
+The database-side rules have their own checks, which apply the migrations to a
+throwaway Postgres (PGlite) rather than mocking anything:
+
+```bash
+npm run event:check  # plays the 3-Text Hunt, tries to cheat at it, and
+                     #   proves 0026 recovers a half-applied database
+npm run bible:check  # 31,102 verses land intact, and the queries stay fast
+npm run map:check    # the location matcher agrees with itself at scale
+```
+
 ## Project structure
 
 ```
@@ -142,7 +152,7 @@ src/
     onboarding/         church creation + spotlight tour trigger
     map/                the pin map: gazetteer-backed API, the projection, and
                           the generated SVG world it is drawn on
-    marketing/           landing page, nav, footer
+    marketing/           landing page, nav, footer, the Pro event banner
     dashboard/          dashboard + settings pages
     download/           desktop download page + the pre-download survey
     songs/              song list, preview, shared library, data access
@@ -153,8 +163,11 @@ src/
     presentation/        engine (BroadcastChannel, slide loader), presenter
                           controls, projector view, the 16:9 slide canvas
     bible/              scripture picker, reference parser, verse search
+    event/              the 3-Text Hunt (web only): the announcement bar, the
+                          board and its dialog, the countdown, the
+                          hidden-word probe, the winner celebration
   stores/               Zustand: auth-store, church-store, presentation-store,
-                          bible-store
+                          bible-store (the event keeps its own, in features/)
   types/                Church/Profile/Song/... types
   test/                 Vitest setup + a mock Supabase query-builder helper
 supabase/
@@ -167,6 +180,8 @@ scripts/
   check-map-migration.mjs         runs 0018 against a throwaway Postgres
   generate-bible-migration.mjs    regenerates 0021 from the KJV source JSON
   check-bible-migration.mjs       runs 0020+0021 against a throwaway Postgres
+  check-event-migration.mjs       plays the 3-Text Hunt against a throwaway
+                                    Postgres, and tries to cheat at it
   build-bible-seed.mjs            regenerates the desktop's copy of the Bible
 docs/
   hymnal-copyright-review.md      which imported hymns ship without lyrics, and why
@@ -304,6 +319,268 @@ they can never read or write any church's songs:
   catalog at `/songs/library` and copy songs into their own hymnal, where the
   copy becomes theirs to edit — later library edits never touch it. Granted by
   a superadmin from `/superadmin` (see `0012_song_encoder.sql`).
+
+## The 3-Text Hunt event
+
+A scavenger hunt on every signed-in dashboard. Three code words — `[SAGIP]`,
+`[MUSICA]` and `[PRO]` — are hidden on three different screens; the first five
+accounts to find all three **in order** keep SagipMusica Pro permanently.
+
+It runs for exactly one week — **14 to 21 September 2026, 8am Philippine time** —
+and is announced, with a countdown and a Join button, from the moment the
+migration is applied. The card also carries a QR code and a copy-link button for
+pulling the rest of the AV team in, because three riddles in three corners of
+the app go faster with a media team than alone.
+
+Everything that decides anything lives in `0023_text_hunt_event.sql`. The client
+is never told where a word is hidden — it works the other way round. As the user
+moves through the app, each participating screen *asks*:
+
+```
+event_probe('bible-chapter', '65:1')   -- "am I standing on anything?"
+```
+
+and the server answers yes or no. The answer keys are in `event_challenges`,
+which has no `SELECT` grant to `anon` or `authenticated`: there is no request a
+browser can make that returns them. Building the app and grepping the bundle for
+`Jesus Saves`, `Jude` or `65:1` finds nothing — only the three slot names, which
+is roughly what the riddles say out loud anyway.
+
+The same applies to the rest of it:
+
+- **The countdown** is drawn from the server's clock (`event_state()` returns
+  `server_now`), so a wound-forward machine clock or an edited DOM changes a
+  number on screen and nothing else. `event_probe` and `event_claim` refuse
+  before the start.
+- **The order** is enforced per claim: level *N* is refused unless levels
+  1..*N*-1 are already solved. Locked levels do not even release their riddle.
+- **`[MUSICA]` moves.** Its hiding place rotates every time somebody solves it —
+  Jude, Psalm 51, Matthew 1, Revelation 1, then round again — so an answer
+  forwarded to a group chat is stale by the time the next person tries it. A
+  player who was *shown* a target keeps a ten-minute grace window on it, so
+  being beaten to the click by a stranger is not a loss.
+- **The prize** is handed out under a row lock on the settings row, so five
+  slots stay five. `profiles.subscription` is written by the function, not the
+  client — a trigger rejects any update to that column arriving as the
+  `authenticated` role, which is what stops a one-line `PATCH` granting Pro.
+- **Brute force** is budgeted: 90 probes a minute, and a cool-off after a run of
+  wrong claims.
+- **The close** is the same kind of gate as the start. Once `ends_at` passes,
+  `event_hunt_open()` is false for everyone — preview accounts included, which
+  is the one place preview does *not* get an exemption — and `event_state()`
+  returns `visible: false`, the single check the dashboard card reads before it
+  renders anything. The board leaves every dashboard on its own.
+
+Nothing is deleted when the week is up. `event_solves`, the winner ranks and
+`profiles.subscription` all stay exactly as they were: the prize lives on the
+profile, not on the card, so a winner keeps their `PRO` tag after the board has
+gone. The card says so in as many words before it disappears — both in the
+closing notice under the countdown and in the panel a finisher sees.
+
+To move or test the window:
+
+```sql
+-- close it now (the board vanishes on the next dashboard load)
+update event_settings set ends_at = now() - interval '1 minute' where id = 1;
+-- reopen it for another week
+update event_settings set ends_at = now() + interval '7 days' where id = 1;
+-- back to the shipped dates
+update event_settings set starts_at = default, ends_at = default where id = 1;
+```
+
+The window is **08:00 to 08:00 Philippine time** (migration 0028) — still
+exactly seven days, but it no longer opens and closes while the country is
+asleep. Both the column defaults and the deployed row are set, so
+`set starts_at = default` — which the rehearsal instructions use to undo a test
+— restores the right window rather than the old midnight one.
+
+Switching `preview_enabled` off **revokes previews already held**, not just
+future ones. That distinction is worth five permanent Pro accounts: without it,
+every account used in testing stays inside the hunt and can finish it weeks
+before anyone else can reach it. `npm run event:check` asserts the revocation.
+
+`npm run event:check` applies every event migration to a throwaway Postgres and plays
+the hunt as several accounts at once — including every shortcut worth trying.
+It runs as the `authenticated` role throughout, which is what a browser gets.
+
+### Where it lives on the dashboard
+
+Behind a **Limited Event** quick action, beside "Add Song" and "Create Worship
+Set" — not as a card in the page. As a card it was full width and half a screen
+tall, which pushed the stats, the quick actions and the recent songs below the
+fold: the wrong trade for something that runs a week and then leaves. The button
+carries its state at a glance (`New`, `1/3`, `Done`) and removes itself entirely
+once the event closes, so the row has no gap where it used to be.
+
+Nothing else changes with that move. Challenge 3 is still the word "Pro" in the
+board's headline; being inside a dialog changes nothing about what the server
+answers.
+
+### How the event announces itself
+
+A dismissible bar across the top of the dashboard, scrolling its message on a
+loop: *SagipMusica Pro is around the corner — and we've prepared a limited event
+just for you. Find it under Quick Actions, then hit Join to see who else is
+playing and reserve your slot.* It pauses on hover, because reading "where do I
+find it" off a moving line is a chore.
+
+This replaced a full-screen celebration that fired on first sign-in. The
+celebration worked, but it landed on people who had just finished the
+walkthrough and wanted to get on with their Sunday — an interruption for a
+promotion, which is the wrong shape for something a church opens on a Saturday
+night to build a service order.
+
+Dismissal is remembered server-side, on the same `event_announcement_seen` row
+the celebration used (migration 0025) — so it is once per account, not once per
+browser, and closing it on the office desktop keeps it closed on the tablet at
+the sound desk. To show it again: `delete from event_announcement_seen
+where user_id = '<uuid>'`.
+
+The walkthrough now says nothing about the event at all. It teaches the app;
+the bar does the promoting.
+
+### If the event does not appear after running the SQL
+
+Run **`0026_text_hunt_repair.sql`**. It re-asserts the whole feature at its
+final shape, is safe to run any number of times, and ends with a diagnostic
+`SELECT` that answers "is it on, and why not" — read that output rather than
+guessing.
+
+Two things it fixes, both of which leave every table and row perfectly intact
+while the event vanishes from the app:
+
+- **Migrations applied out of order.** 0023, 0024 and 0025 each redefine the
+  *whole* of `event_state()`, because each adds a field. Run 0023 last — easy
+  when pasting a folder of files into the SQL editor — and the function reverts
+  to the version with no `visible` in it. The dashboard reads `visible` as
+  undefined and renders nothing. `npm run event:check` reproduces this exact
+  failure and proves 0026 recovers from it.
+- **PostgREST's schema cache.** A function the API has not noticed yet returns
+  404 to the browser exactly as if it did not exist. 0026 ends with
+  `notify pgrst, 'reload schema'`.
+
+The client also defends itself: `normalize()` in `features/event/api.ts` fills
+in `visible` and `announcement_seen` when an older `event_state()` omits them,
+so a half-applied database degrades instead of going blank. That is a
+stopgap — run 0026 to put the server right.
+
+### If the walkthrough does not appear
+
+It runs once per account and marks itself done on the way out — including when
+it is dismissed with Esc or a click outside — so the first thing to rule out is
+that it simply already ran. There is a **Replay the walkthrough** button in
+Settings for exactly that: one click, no SQL, and it makes "it never appeared"
+answerable instead of indistinguishable from "it was dismissed by accident".
+
+Three failure modes have been removed from it, all of which looked identical
+from the outside — nothing happens, no error, and the account is marked
+onboarded so it never comes back:
+
+- **The dynamic import.** `driver.js` was loaded with `await import()`, which
+  put an async gap between "this account needs the walkthrough" and the
+  walkthrough existing. Anything going wrong in that gap — a rejected chunk
+  request, an unmount landing mid-flight — failed silently and permanently. It
+  is a plain top-level import now; seven kilobytes gzipped is not worth a
+  first-run experience that can vanish without trace. Failures are caught,
+  logged, and leave the account eligible to try again.
+
+- **Waiting on the event.** The tour briefly waited for `event_state()` so its
+  last step could point at the Limited Event button. That made a slow or failing
+  promotional endpoint capable of taking the entire first run down with it. The
+  tour no longer references the event in any way.
+
+- **Hidden anchors.** Five steps point into the sidebar, which is
+  `hidden md:block` — in the DOM at every width, `display: none` below 768px.
+  Highlighting those gives popovers nothing to attach to. Steps are filtered by
+  computed style, and — importantly — if that filter would leave nothing, the
+  unfiltered list is used anyway. The filter is an improvement, not a gate: a
+  walkthrough that declines to run looks exactly like one that is broken.
+
+`DashboardPage.onboarding.test.tsx` pins all of it, including that every step
+anchors to an element that is really on the page.
+
+### On the landing page
+
+`ProEventSection` sits directly after the hero, with a golden key flanking the
+copy on each side (they step out of the way below `lg`, where two decorative
+images either side of a paragraph would leave the paragraph unreadable). It is
+the only thing on that page with a deadline, and it removes itself when the hunt
+closes.
+
+That is the one place `event_state()` is granted to `anon`. The signed-out branch
+returns before it touches a single account-scoped query and hands back five
+public facts — is it on, when does it open, when does it close, has it started,
+how many joined — which is the same class of endpoint as `public_platform_stats()`.
+`event_probe`, `event_claim`, `event_join` and `event_ack_announcement` all stay
+`authenticated`-only, and the check script asserts each of those refusals.
+
+### Web only
+
+The hunt is a hosted-app feature: it needs accounts to award a prize to, one
+shared clock, and a server to hold the answers — none of which exist in the
+desktop build. There is **no event on desktop**, and three small things in
+`desktop/` exist purely to keep it that way:
+
+- `renderer/data/event.ts` — a stand-in that reports the event as switched off.
+- one line in `electron.vite.config.ts` aliasing `@/features/event/api` to it.
+- two fields in `toProfile()`, because `Profile` gained `subscription`.
+
+These are load-bearing, not optional. The song editor and the Bible browser are
+shared with the web app verbatim and both import the event's client module, so
+without the alias the desktop renderer pulls in the Supabase client — which
+throws at module load in a build that has no Supabase, taking the whole renderer
+down with it (a white screen on launch, not a degraded page). Without the
+`toProfile` fields, `npm run typecheck` in `desktop/` fails outright. Reverting
+any of the three does not remove the event from desktop; it breaks desktop.
+
+### Rehearsing the hunt
+
+The localhost **Start** and **Reset** buttons are gone, and `preview_enabled`
+now ships **off** (migration 0027) — removing the buttons without closing the
+RPCs would have made things worse, not better, since
+`event_start_preview()` is an endpoint and not a button.
+
+Rehearse by moving the window instead. It exercises the real clock-driven path
+rather than a bypass, which is the thing actually worth rehearsing:
+
+```sql
+-- open it now, for an hour
+update event_settings
+   set starts_at = now(), ends_at = now() + interval '1 hour'
+ where id = 1;
+
+-- put it back
+update event_settings set starts_at = default, ends_at = default where id = 1;
+```
+
+To replay an account's hunt, clear its progress by hand:
+
+```sql
+delete from event_solves            where user_id = '<uuid>';
+delete from event_participants      where user_id = '<uuid>';
+delete from event_announcement_seen where user_id = '<uuid>';
+update profiles set subscription = 'free', subscription_granted_at = null
+ where id = '<uuid>';
+```
+
+To pull the whole thing off the dashboard, set `is_active = false` on the
+settings row.
+
+Note that challenge 1 hides `[SAGIP]` on the song editor, which is
+`admin`-only — a `presenter` can join and see the riddles but cannot reach
+that screen.
+
+## Subscription tiers
+
+Every account carries `profiles.subscription`, defaulting to `free`. It is not
+writable from the client (see above); `pro` is awarded by `event_claim()` and by
+SQL. A Pro account shows a `PRO` tag beside its name in the sidebar. No feature
+is gated on it yet — the tier exists so that when Pro ships, the question "what
+does a Pro account see" already has somewhere to be asked.
+
+Free is not a trial. The plan every church is on today keeps the hymnal, worship
+sets, the built-in Bible and live presentation after the event and after Pro
+ships; Pro is additive.
 
 ## What's intentionally not built yet
 

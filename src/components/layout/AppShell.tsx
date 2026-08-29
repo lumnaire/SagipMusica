@@ -170,8 +170,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">
-              {profile?.name || session?.user.email}
+            <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+              <span className="truncate">{profile?.name || session?.user.email}</span>
+              {/* The tier, where the account's own name is. Free is the norm and
+                  goes unmarked; Pro is what somebody won, so it is worth seeing
+                  every time they look at the sidebar. */}
+              {profile?.subscription === "pro" && (
+                <span className="shrink-0 rounded bg-amber-400 px-1.5 py-px font-mono text-[10px] font-bold leading-tight tracking-wider text-neutral-950">
+                  PRO
+                </span>
+              )}
             </p>
             <p className="truncate text-xs capitalize text-sidebar-foreground/55">
               {profile?.role ?? "presenter"}

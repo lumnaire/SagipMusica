@@ -58,6 +58,11 @@ const dataLayerOverrides = [
   { find: "@/features/worship-sets/api", replacement: desktop("renderer/data/worship-sets.ts") },
   { find: "@/features/dashboard/api", replacement: desktop("renderer/data/dashboard.ts") },
   { find: "@/features/bible/api", replacement: desktop("renderer/data/bible.ts") },
+  // Not a data module in the usual sense -- there is no desktop equivalent of
+  // the 3-Text Hunt at all. It is here because the song editor and the Bible
+  // browser are shared verbatim and both import it; the stand-in reports the
+  // event as off. See desktop/renderer/data/event.ts.
+  { find: "@/features/event/api", replacement: desktop("renderer/data/event.ts") },
   { find: "@/lib/save-sections", replacement: desktop("renderer/data/save-sections.ts") },
   {
     find: "@/features/presentation/engine/loadPresentation",

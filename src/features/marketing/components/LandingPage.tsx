@@ -1,5 +1,6 @@
 import { MarketingNav } from "./MarketingNav";
 import { HeroSection } from "./HeroSection";
+import { ProEventSection } from "./ProEventSection";
 import { LiveSlideShowcase } from "./LiveSlideShowcase";
 import { FeaturesSection } from "./FeaturesSection";
 import { HowItWorksSection } from "./HowItWorksSection";
@@ -18,6 +19,9 @@ export function LandingPage() {
       <MarketingNav />
       <main>
         <HeroSection />
+        {/* Straight after the hero: it is the only thing on this page with a
+            deadline, and it removes itself once the event closes. */}
+        <ProEventSection />
         <LiveSlideShowcase />
         <FeaturesSection />
         <HowItWorksSection />

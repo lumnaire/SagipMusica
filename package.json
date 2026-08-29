@@ -15,7 +15,8 @@
     "map:check": "node scripts/check-map-migration.mjs",
     "bible:generate": "node scripts/generate-bible-migration.mjs",
     "bible:check": "node scripts/check-bible-migration.mjs",
-    "bible:seed": "node scripts/build-bible-seed.mjs"
+    "bible:seed": "node scripts/build-bible-seed.mjs",
+    "event:check": "node scripts/check-event-migration.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

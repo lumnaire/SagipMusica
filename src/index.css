@@ -272,3 +272,20 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* The event announcement bar's marquee.
+   
+   Two identical copies of the message sit side by side and the track slides
+   exactly half its own width, so the second copy lands where the first began
+   and the loop has no seam. The reduced-motion rule below already pins every
+   animation to a single 0.01ms pass, which leaves the message stationary and
+   readable rather than crawling -- which is the right outcome for anyone who
+   asked the system for less movement. */
+@keyframes event-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

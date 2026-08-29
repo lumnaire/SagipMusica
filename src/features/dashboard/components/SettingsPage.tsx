@@ -22,10 +22,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { MIN_PASSWORD_LENGTH, useAuthStore } from "@/stores/auth-store";
 import { useChurchStore } from "@/stores/church-store";
+import { restartOnboarding } from "@/features/dashboard/api";
 
 export function SettingsPage() {
-  const { profile, session, signOut, updateName, updateEmail, updatePassword, deleteAccount } =
-    useAuthStore();
+  const {
+    profile,
+    session,
+    signOut,
+    refreshProfile,
+    updateName,
+    updateEmail,
+    updatePassword,
+    deleteAccount,
+  } = useAuthStore();
   const church = useChurchStore((s) => s.church);
   const updateChurchName = useChurchStore((s) => s.updateName);
   const updateAccentColor = useChurchStore((s) => s.updateAccentColor);
@@ -206,6 +215,42 @@ export function SettingsPage() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* The walkthrough runs once and marks itself done on the way out --
+            including when it is dismissed with Esc or a click outside. Without
+            this, getting it back means editing the profiles row by hand, and
+            "the tour never appeared" is unanswerable rather than one click to
+            check. */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Walkthrough</CardTitle>
+            <CardDescription>
+              The guided tour of the dashboard, songs, worship sets and the Bible.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              disabled={busy === "tour"}
+              onClick={async () => {
+                if (!profile) return;
+                setBusy("tour");
+                try {
+                  await restartOnboarding(profile.id);
+                  await refreshProfile();
+                  navigate("/dashboard");
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Couldn't restart the walkthrough.");
+                } finally {
+                  setBusy(null);
+                }
+              }}
+            >
+              {busy === "tour" ? "Starting..." : "Replay the walkthrough"}
+            </Button>
           </CardContent>
         </Card>
 

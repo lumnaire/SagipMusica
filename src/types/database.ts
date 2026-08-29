@@ -1,5 +1,16 @@
 export type UserRole = "admin" | "presenter" | "superadmin" | "encoder";
 
+/**
+ * What an account is entitled to. Every account starts free, including the
+ * ones created before the column existed.
+ *
+ * `pro` is awarded, never bought — for now, by finishing the 3-Text Hunt (see
+ * 0023). The column is not writable from the client: a trigger rejects any
+ * update to it that arrives as the `authenticated` role, so the tier can only
+ * change through a SECURITY DEFINER function.
+ */
+export type SubscriptionTier = "free" | "pro";
+
 /** Draft templates are visible only to encoders; publishing exposes them to admins. */
 export type TemplateStatus = "draft" | "published";
 
@@ -60,6 +71,9 @@ export interface Profile {
   email: string;
   name: string | null;
   role: UserRole;
+  subscription: SubscriptionTier;
+  /** When Pro was granted; null on a free account. */
+  subscription_granted_at: string | null;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;

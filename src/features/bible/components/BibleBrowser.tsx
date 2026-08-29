@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { HiddenToken } from "@/features/event/components/HiddenToken";
 import { useBibleStore } from "@/stores/bible-store";
 // NOT "../api", even though it sits right next door. The desktop build swaps
 // this module for a SQLite one by aliasing the exact specifier
@@ -384,6 +385,17 @@ export function BibleBrowser({ onPresent, onAdd, compact = false }: BibleBrowser
                   </button>
                 );
               })
+            )}
+
+            {/* After the last verse, where the hunt's second code word can be
+                hiding. The server decides -- this renders nothing on every
+                other chapter, and for everyone not playing. The chapter it
+                answers yes for moves as people solve it, so there is no fixed
+                reference to pass around. */}
+            {bookId !== null && !versesLoading && verses.length > 0 && (
+              <div className="flex justify-center px-2 pb-1 pt-3">
+                <HiddenToken slot="bible-chapter" context={`${bookId}:${chapter}`} />
+              </div>
             )}
           </div>
         </div>

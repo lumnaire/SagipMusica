@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import type { UserRole } from "@/types/database";
+import type { SubscriptionTier, UserRole } from "@/types/database";
 
 export interface PlatformStats {
   total_accounts: number;
@@ -9,6 +9,10 @@ export interface PlatformStats {
   total_library_songs: number;
   /** Rows in download_signups -- installers handed out, not distinct churches. */
   total_desktop_downloads: number;
+  total_pro_accounts: number;
+  /** The 3-Text Hunt: accounts that joined, and accounts that finished it. */
+  event_participants: number;
+  event_completions: number;
 }
 
 /** The only transitions superadmin_set_role accepts. */
@@ -19,6 +23,7 @@ export interface PlatformAccount {
   email: string;
   name: string | null;
   role: UserRole;
+  subscription: SubscriptionTier;
   church_id: string | null;
   church_name: string | null;
   onboarding_completed: boolean;
